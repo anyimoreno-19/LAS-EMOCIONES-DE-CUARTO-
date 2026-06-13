@@ -1,154 +1,79 @@
-/* eslint-disable no-undef */
 /**
- * Puzzle activity (Export)
+ * Relaciona activity (Export)
  *
  * Released under Attribution-ShareAlike 4.0 International License.
  * Author: Manuel Narváez Martínez
  * License: http://creativecommons.org/licenses/by-sa/4.0/
  *
  */
-var $eXePuzzle = {
+var $eXeRelaciona = {
     idevicePath: '',
-    borderColors: {
-        black: '#1c1b1b',
-        blue: '#0056b3',
-        green: '#006641',
-        red: '#a2241a',
-        white: '#ffffff',
-        yellow: '#f3d55a',
-    },
-    colors: {
-        black: '#1c1b1b',
-        blue: '#0056b3',
-        green: '#006641',
-        red: '#a2241a',
-        white: '#ffffff',
-        yellow: '#fcf4d3',
-    },
+    borderColors: $exeDevices.iDevice.gamification.colors.borderColors,
+    colors: $exeDevices.iDevice.gamification.colors.backColor,
     options: [],
     hasSCORMbutton: false,
     isInExe: false,
     userName: '',
     previousScore: '',
     initialScore: '',
+    version: 3,
     scormAPIwrapper: 'libs/SCORM_API_wrapper.js',
     scormFunctions: 'libs/SCOFunctions.js',
     mScorm: null,
+    jqueryui: 1,
+
     init: function () {
         $exeDevices.iDevice.gamification.initGame(
             this,
-            'Puzzle',
-            'puzzle',
-            'puzzle-IDevice'
+            'Relate',
+            'relate',
+            'relaciona-IDevice'
         );
     },
 
     enable: function () {
-        $eXePuzzle.loadGame();
-    },
-
-    stopAllSounds: function (instance) {
-        const mOptions = $eXePuzzle.options[instance];
-        if (
-            mOptions &&
-            $exeDevices &&
-            $exeDevices.iDevice &&
-            $exeDevices.iDevice.gamification &&
-            $exeDevices.iDevice.gamification.media
-        ) {
-            try {
-                $exeDevices.iDevice.gamification.media.stopSound();
-            } catch (e) {
-                /* noop */
-            }
-        }
-        const $container = $('#pzlMainContainer-' + instance);
-        $container.find('audio, video').each(function () {
-            try {
-                if (typeof this.pause === 'function') this.pause();
-                if (!isNaN(this.currentTime)) this.currentTime = 0;
-            } catch (e) {
-                /* noop */
-            }
-        });
-    },
-
-    bindFullscreenEvents: function (instance) {
-        const mOptions = $eXePuzzle.options[instance];
-        if (!mOptions) return;
-        const container = document.getElementById(
-            'pzlGameContainer-' + instance
-        );
-        if (!container) return;
-
-        if (mOptions._fsBound) return;
-
-        const handler = function () {
-            const el =
-                document.fullscreenElement ||
-                document.webkitFullscreenElement ||
-                document.mozFullScreenElement ||
-                document.msFullscreenElement;
-            const isFS = el === container;
-            if (isFS) {
-                container.classList.add('PZLP-IsFull');
-            } else {
-                container.classList.remove('PZLP-IsFull');
-            }
-            try {
-                setTimeout(function () {
-                    $eXePuzzle.resizePuzzlePieces(instance);
-                }, 50);
-            } catch (e) {}
-        };
-
-        [
-            'fullscreenchange',
-            'webkitfullscreenchange',
-            'mozfullscreenchange',
-            'MSFullscreenChange',
-        ].forEach(function (evt) {
-            document.addEventListener(evt, handler);
-        });
-
-        mOptions._fsBound = true;
-        mOptions._fsHandler = handler;
-
-        setTimeout(handler, 0);
+        $eXeRelaciona.loadGame();
     },
 
     loadGame: function () {
-        $eXePuzzle.options = [];
-        $eXePuzzle.activities.each(function (i) {
-            const dl = $('.puzzle-DataGame', this);
+        $eXeRelaciona.options = [];
+
+        $eXeRelaciona.activities.each(function (i) {
+            const dl = $('.relaciona-DataGame', this);
             if (dl.length === 0) return; // Skip already initialized activities
-            const mOption = $eXePuzzle.loadDataGame(dl, this);
+            const mOption = $eXeRelaciona.loadDataGame(dl, this);
 
             mOption.scorerp = 0;
-            mOption.idevicePath = $eXePuzzle.idevicePath;
-            mOption.main = 'pzlMainContainer-' + i;
-            mOption.idevice = 'puzzle-IDevice';
+            mOption.idevicePath = $eXeRelaciona.idevicePath;
+            mOption.main = 'rlcMainContainer-' + i;
+            mOption.idevice = 'relaciona-IDevice';
 
-            $eXePuzzle.options.push(mOption);
+            $eXeRelaciona.options.push(mOption);
 
-            const pzl = $eXePuzzle.createInterfacePuzzle(i);
-            dl.before(pzl).remove();
-            $('#pzlGameMinimize-' + i).hide();
-            $('#pzlGameContainer-' + i).hide();
+            const rlc = $eXeRelaciona.createInterfaceCards(i);
+
+            dl.before(rlc).remove();
+            $('#rlcGameMinimize-' + i).hide();
+            $('#rlcGameContainer-' + i).hide();
+            $('#rlcCubierta-' + i).hide();
             if (mOption.showMinimize) {
-                $('#pzlGameMinimize-' + i)
-                    .css({
-                        cursor: 'pointer',
-                    })
+                $('#rlcGameMinimize-' + i)
+                    .css({ cursor: 'pointer' })
                     .show();
             } else {
-                $('#pzlGameContainer-' + i).show();
+                $('#rlcGameContainer-' + i).show();
             }
-            $('#pzlDivFeedBack-' + i).prepend($('.puzzle-feedback-game', this));
-            $eXePuzzle.addEvents(i);
-            $eXePuzzle.showPuzzle(0, i);
-            $('#pzlDivFeedBack-' + i).hide();
-            $('#pzlMainContainer-' + i).show();
+
+            $eXeRelaciona.createCards(i);
+
+            $eXeRelaciona.addEvents(i);
+            if (mOption.type == 2 && mOption.time > 0) {
+                $('#rlcImgTime-' + i).show();
+                $('#rlcPTime-' + i).show();
+                $('#rlcStartGame-' + i).show();
+                $('#rlcMessage-' + i).hide();
+                $eXeRelaciona.updateTime(mOption.time * 60, i);
+            }
         });
 
         let node = document.querySelector('.page-content');
@@ -157,416 +82,290 @@ var $eXePuzzle = {
         }
         if (node)
             $exeDevices.iDevice.gamification.observers.observeResize(
-                $eXePuzzle,
+                $eXeRelaciona,
                 node
             );
 
-        const puzzleHtml = $('.puzzle-IDevice').html();
-        if ($exeDevices.iDevice.gamification.math.hasLatex(puzzleHtml)) {
+        const relateHtml = $('.relaciona-IDevice').html();
+        if ($exeDevices.iDevice.gamification.math.hasLatex(relateHtml)) {
             $exeDevices.iDevice.gamification.math.updateLatex(
-                '.puzzle-IDevice'
+                '.relaciona-IDevice'
             );
         }
-    },
-
-    getPhraseDefault: function () {
-        return {
-            cards: [],
-            msgError: '',
-            msgHit: '',
-            definition: '',
-            puzzle: '',
-        };
     },
 
     loadDataGame: function (data, sthis) {
-        let json = $exeDevices.iDevice.gamification.helpers.decrypt(
-            data.text()
-        );
-
+        let json = data.text();
+        json = $exeDevices.iDevice.gamification.helpers.sanitizeJSONString(json);
         const mOptions =
                 $exeDevices.iDevice.gamification.helpers.isJsonString(json),
-            $audiosDef = $('.puzzle-LinkAudiosDef', sthis),
-            $imagesDef = $('.puzzle-LinkImagesDef', sthis),
-            $audiosClue = $('.puzzle-LinkAudiosClue', sthis);
+            $imagesLink = $('.relaciona-LinkImages', sthis),
+            $audiosLink = $('.relaciona-LinkAudios', sthis),
+            $imagesLinkBack = $('.relaciona-LinkImagesBack', sthis),
+            $audiosLinkBack = $('.relaciona-LinkAudiosBack', sthis);
 
         mOptions.playerAudio = '';
-        mOptions.solutionShown = false;
-        mOptions.hits = 0;
-        mOptions.errors = 0;
-        mOptions.score = 0;
-        mOptions.gameActived = true;
-        mOptions.counter = 0;
-        mOptions.gameOver = false;
         mOptions.gameStarted = false;
-        mOptions.obtainedClue = false;
-        mOptions.hits = 0;
-        mOptions.active = 0;
-        mOptions.selectedTile = null;
-        mOptions.loading = false;
+        mOptions.typeDrag = 0;
 
-        for (let i = 0; i < mOptions.puzzlesGame.length; i++) {
-            const q = mOptions.puzzlesGame[i];
-            q.type = typeof q.type == 'undefined' ? 1 : q.type;
-        }
-        $imagesDef.each(function () {
-            const iqb = parseInt($(this).text());
-            if (!isNaN(iqb) && iqb < mOptions.puzzlesGame.length) {
-                mOptions.puzzlesGame[iqb].url = $(this).attr('href');
-                if (mOptions.puzzlesGame[iqb].url.length < 4) {
-                    mOptions.puzzlesGame[iqb].url = '';
+        $imagesLink.each(function () {
+            const iq = parseInt($(this).text());
+            if (!isNaN(iq) && iq < mOptions.cardsGame.length) {
+                const flipcard = mOptions.cardsGame[iq];
+                flipcard.url = $(this).attr('href');
+                if (flipcard.url.length < 4) {
+                    flipcard.url = '';
                 }
             }
         });
 
-        $audiosDef.each(function () {
+        $audiosLink.each(function () {
             const iqa = parseInt($(this).text());
-            if (!isNaN(iqa) && iqa < mOptions.puzzlesGame.length) {
-                mOptions.puzzlesGame[iqa].audioDefinition =
-                    $(this).attr('href');
-                if (mOptions.puzzlesGame[iqa].audioDefinition.length < 4) {
-                    mOptions.puzzlesGame[iqa].audioDefinition = '';
+            if (!isNaN(iqa) && iqa < mOptions.cardsGame.length) {
+                const flipcard = mOptions.cardsGame[iqa];
+                flipcard.audio = $(this).attr('href');
+                if (flipcard.audio.length < 4) {
+                    flipcard.audio = '';
                 }
             }
         });
 
-        $audiosClue.each(function () {
+        $imagesLinkBack.each(function () {
+            const iq = parseInt($(this).text());
+            if (!isNaN(iq) && iq < mOptions.cardsGame.length) {
+                const flipcard = mOptions.cardsGame[iq];
+                flipcard.urlBk = $(this).attr('href');
+                if (flipcard.urlBk.length < 4) {
+                    flipcard.urlBk = '';
+                }
+            }
+        });
+
+        $audiosLinkBack.each(function () {
             const iqa = parseInt($(this).text());
-            if (!isNaN(iqa) && iqa < mOptions.puzzlesGame.length) {
-                mOptions.puzzlesGame[iqa].audioClue = $(this).attr('href');
-                if (mOptions.puzzlesGame[iqa].audioClue.length < 4) {
-                    mOptions.puzzlesGame[iqa].audioClue = '';
+            if (!isNaN(iqa) && iqa < mOptions.cardsGame.length) {
+                const flipcard = mOptions.cardsGame[iqa];
+                flipcard.audioBk = $(this).attr('href');
+                if (flipcard.audioBk.length < 4) {
+                    flipcard.audioBk = '';
                 }
             }
         });
-
+        mOptions.currentWordDiv = null;
+        mOptions.linesMap = new Map();
+        mOptions.lines = [];
+        mOptions.permitirErrores = mOptions.type > 0;
+        mOptions.time =
+            typeof mOptions.time === 'undefined' ? 0 : mOptions.time;
         mOptions.evaluation =
-            typeof mOptions.evaluation == 'undefined'
+            typeof mOptions.evaluation === 'undefined'
                 ? false
                 : mOptions.evaluation;
         mOptions.evaluationID =
-            typeof mOptions.evaluationID == 'undefined'
+            typeof mOptions.evaluationID === 'undefined'
                 ? ''
                 : mOptions.evaluationID;
-        mOptions.id = typeof mOptions.id == 'undefined' ? false : mOptions.id;
-        mOptions.puzzlesGame =
+        mOptions.hits = 0;
+        mOptions.errors = 0;
+        mOptions.score = 0;
+        mOptions.active = 0;
+        mOptions.obtainedClue = false;
+
+        mOptions.cardsGame =
             $exeDevices.iDevice.gamification.helpers.getQuestions(
-                mOptions.puzzlesGame,
-                mOptions.percentajeQuestions,
-                mOptions.randomPuzzles
+                mOptions.cardsGame,
+                mOptions.percentajeCards,
+                mOptions.randomCards
             );
+        for (let i = 0; i < mOptions.cardsGame.length; i++) {
+            mOptions.cardsGame[i].id = i;
+            mOptions.cardsGame[i].eText = $eXeRelaciona.decodeURIComponentSafe(
+                mOptions.cardsGame[i].eText
+            );
+            mOptions.cardsGame[i].eTextBk =
+                $eXeRelaciona.decodeURIComponentSafe(
+                    mOptions.cardsGame[i].eTextBk
+                );
+            const id = $eXeRelaciona.getID();
+            mOptions.cardsGame[i].lineindex = id;
+        }
 
-        mOptions.numberQuestions = mOptions.puzzlesGame.length;
-
+        mOptions.numberCards = mOptions.cardsGame.length;
+        mOptions.realNumberCards = mOptions.numberCards;
+        mOptions.fullscreen = false;
         return mOptions;
     },
 
-    showPuzzle: function (num, instance) {
-        const mOptions = $eXePuzzle.options[instance];
-
-        mOptions.active = num;
-        mOptions.puzzle = mOptions.puzzlesGame[num];
-        mOptions.attemps = 0;
-        mOptions.loading = num === 0 && mOptions.puzzle.showTime;
-        mOptions.audiofirst =
-            num === 0 && mOptions.puzzle.audioDefinition.length > 3;
-
-        $eXePuzzle.stopAllSounds(instance);
-        $eXePuzzle.showMessage(
-            3,
-            mOptions.puzzlesGame[num].definition,
-            instance
-        );
-
-        [
-            '#pzlImage-',
-            '#pzlShowImage-',
-            '#pzlShowNumber-',
-            '#pzlTime-',
-            '#pzlImgTime-',
-            '#pzlAttemps-',
-            '#pzlImgAttemps-',
-        ].forEach((selector) => {
-            $(selector + instance).hide();
-        });
-
-        $('#pzlAttemps-' + instance).text('0');
-        $('#pzlAuthor-' + instance).html(mOptions.puzzle.author);
-        $('#pzlImage-' + instance).attr(
-            'alt',
-            mOptions.puzzle.atl || mOptions.msgs.msgNoImage
-        );
-
-        ['PZLP-Tile', 'PZLP-TileChang', 'PZLP-Completed'].forEach((cls) => {
-            $('#pzlImagePuzzle-' + instance)
-                .find(`.${cls}`)
-                .remove();
-        });
-
-        $eXePuzzle.showImagePuzzle(num, instance);
-        $('#pzlAudioDef-' + instance).hide();
-        $('#pzlAudioClue-' + instance).hide();
-
-        const container = document.getElementById(
-            'pzlGameContainer-' + instance
-        );
-        if (
-            container &&
-            (container === document.fullscreenElement ||
-                container.classList.contains('PZLP-IsFull'))
-        ) {
-            $eXePuzzle.bindFullscreenEvents(instance);
-            setTimeout(function () {
-                $eXePuzzle.resizePuzzlePieces(instance);
-            }, 50);
-        }
+    decodeURIComponentSafe: function (s) {
+        if (!s) return s;
+        return decodeURIComponent(s).replace('&percnt;', '%');
     },
 
-    createInterfacePuzzle: function (instance) {
-        const path = $eXePuzzle.idevicePath,
-            msgs = $eXePuzzle.options[instance].msgs,
-            mOptions = $eXePuzzle.options[instance],
-            html = `
-        <div class="PZLP-MainContainer" id="pzlMainContainer-${instance}">
-            <div class="PZLP-GameMinimize" id="pzlGameMinimize-${instance}">
-                <a href="#" class="PZLP-LinkMaximize" id="pzlLinkMaximize-${instance}" title="${msgs.msgMaximize}">
-                    <img src="${path}puzzleIcon.png" class="PZLP-IconMinimize PZLP-Activo" alt="">
-                    <div class="PZLP-MessageMaximize" id="pzlMessageMaximize-${instance}">${msgs.msgPlayStart}</div>
-                </a>
-            </div>
-            <div class="PZLP-GameContainer" id="pzlGameContainer-${instance}">
-                <div class="PZLP-GameScoreBoard" id="pzlGameScoreBoard-${instance}">
-                    <div class="PZLP-GameScores">
-                        <div class="exeQuextIcons exeQuextIcons-Number" id="pzlPNumberIcon-${instance}" title="${msgs.msgNumQuestions}"></div>
-                        <p><span class="sr-av">${msgs.msgNumQuestions}: </span><span id="pzlPNumber-${instance}">0</span></p>
-                        <div class="exeQuextIcons exeQuextIcons-Hit" title="${msgs.msgHits}"></div>
-                        <p><span class="sr-av">${msgs.msgHits}: </span><span id="pzlPHits-${instance}">0</span></p>
-                        <div style="display:none;" class="exeQuextIcons exeQuextIcons-Error" title="${msgs.msgErrors}"></div>
-                        <p style="display:none;"><span class="sr-av">${msgs.msgErrors}: </span><span id="pzlPErrors-${instance}">0</span></p>
-                        <div class="exeQuextIcons exeQuextIcons-Score" id="pzlPScoreIcon-${instance}" title="${msgs.msgScore}"></div>
-                        <p><span class="sr-av">${msgs.msgScore}: </span><span id="pzlPScore-${instance}">0</span></p>
-                    </div>
-                    <div class="PZLP-Info" id="pzlInfo-${instance}"></div>
-                    <div class="PZLP-TimeNumber">
-                        <strong><span class="sr-av">${msgs.msgTimePuzzle}:</span></strong>
-                        <div class="exeQuextIcons exeQuextIcons-Time" id="pzlImgTime-${instance}" title="${msgs.msgTimePuzzle}"></div>
-                        <p id="pzlTime-${instance}" class="PZLP-PTime">00:00</p>
-                        <strong><span class="sr-av">${msgs.msgAttempsNumbers}:</span></strong>
-                        <div class="exeQuextIcons exeQuextIcons-Number" id="pzlImgAttemps-${instance}" title="${msgs.msgAttempsNumbers}"></div>
-                        <p id="pzlAttemps-${instance}" class="PZLP-PAttemps">0</p>
-                        <a href="#" id="pzlShowImage-${instance}" title="${msgs.msgShowImage}">
-                            <strong><span class="sr-av">${msgs.msgShowImage}:</span></strong>
-                            <div class="exeQuextIcons exeQuextIcons-ShowImage PZLP-Activo"></div>
-                        </a>
-                        <a href="#" id="pzlShowNumber-${instance}" title="${msgs.msgShowNumbers}">
-                            <strong><span class="sr-av">${msgs.msgShowNumbers}:</span></strong>
-                            <div class="exeQuextIcons exeQuextIcons-Numbers PZLP-Activo"></div>
-                        </a>
-                        <a href="#" class="PZLP-LinkMinimize" id="pzlLinkMinimize-${instance}" title="${msgs.msgMinimize}">
-                            <strong><span class="sr-av">${msgs.msgMinimize}:</span></strong>
-                            <div class="exeQuextIcons exeQuextIcons-Minimize PZLP-Activo"></div>
-                        </a>
-                        <a href="#" class="PZLP-LinkFullScreen" id="pzlLinkFullScreen-${instance}" title="${msgs.msgFullScreen}">
-                            <strong><span class="sr-av">${msgs.msgFullScreen}:</span></strong>
-                            <div class="exeQuextIcons exeQuextIcons-FullScreen PZLP-Activo" id="pzlFullScreen-${instance}"></div>
-                        </a>
-                    </div>
-                </div>
-                <div class="PZLP-Multimedia" id="pzlMultimedia-${instance}">
-                    <div class="PZLP-QuestionDiv" id="pzlQuestionDiv-${instance}">
-                        <div class="PZLP-Message" id="pzlMessage-${instance}"></div>
-                        <a href="#" id="pzlAudioDef-${instance}" class="PZLP-LinkAudioDef">
-                            <img src="${$eXePuzzle.idevicePath}exequextplayaudio.svg">
-                        </a>
-                        <a href="#" id="pzlAudioClue-${instance}" class="PZLP-LinkAudioDef">
-                            <img src="${$eXePuzzle.idevicePath}exequextplayaudio.svg">
-                        </a>
-                    </div>
-                    <div class="PZLP-ImageDiv" id="pzlImageDiv-${instance}">
-                        <img class="PZLP-ImageDef" id="pzlImage-${instance}" src="${path}puzzle-Image.png" alt="${msgs.msgNoImage}" />
-                        <div class="PZLP-ImagePuzzle" id="pzlImagePuzzle-${instance}"></div>
-                    </div>
-                    <div class="PZLP-Author" id="pzlAuthor-${instance}"></div>                                   
-                </div>
-                <div class="PZLP-AuthorGame" id="pzlAuthorGame-${instance}"></div>
-            </div>
-            <div class="PZLP-Cubierta" id="pzlCubierta-${instance}">
-                <div class="PZLP-GameOverExt" id="pzlGameOver-${instance}">
-                    <div class="PZLP-StartGameEnd" id="pzlMesasgeEnd-${instance}"></div>
-                    <div class="PZLP-GameOver">
-                        <div class="PZLP-DataImage">
-                            <img src="${path}exequextwon.png" class="PZLP-HistGGame" id="pzlHistGame-${instance}" alt="${msgs.msgAllQuestions}" />
-                            <img src="${path}exequextlost.png" class="PZLP-LostGGame" id="pzlLostGame-${instance}" alt="${msgs.msgTimeOver}" />
-                        </div>
-                            <div class="PZLP-DataScore">
-                                <p id="pzlOverNumCards-${instance}"></p>
-                                <p id="pzlOverHits-${instance}"></p>
-                                <p style="display:none;" id="pzlOverErrors-${instance}"></p>
-                                <p id="pzlOverScore-${instance}"></p>
-                            </div>
-                        </div>
-                        <div class="PZLP-StartGameEnd">
-                                <a href="#" id="pzlStartGameEnd-${instance}">${msgs.msgPlayAgain}</a>
-                        </div>
-                    </div>
-                    <div class="PZLP-CodeAccessDiv" id="pzlCodeAccessDiv-${instance}">
-                        <div class="PZLP-MessageCodeAccessE" id="pzlMesajeAccesCodeE-${instance}"></div>
-                        <div class="PZLP-DataCodeAccessE">
-                            <label class="sr-av">${msgs.msgCodeAccess}:</label>
-                            <input type="text" class="PZLP-CodeAccessE form-control" id="pzlCodeAccessE-${instance}" placeholder="${msgs.msgCodeAccess}">
-                            <a href="#" id="pzlCodeAccessButton-${instance}" title="${msgs.msgSubmit}">
-                                <strong><span class="sr-av">${msgs.msgSubmit}</span></strong>
-                                    <div class="exeQuextIcons-Submit PZLP-Activo"></div>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="PZLP-ShowClue" id="pzlShowClue-${instance}">
-                        <p class="sr-av">${msgs.msgClue}</p>
-                        <p class="PZLP-PShowClue" id="pzlPShowClue-${instance}"></p>
-                        <a href="#" class="PZLP-ClueBotton" id="pzlClueButton-${instance}" title="${msgs.msgContinue}">${msgs.msgContinue}</a>
-                    </div>
-                </div>    
-                <div class="PZLP-DivFeedBack" id="pzlDivFeedBack-${instance}">
-                    <input type="button" id="pzlFeedBackClose-${instance}" value="${msgs.msgClose}" class="feedbackbutton" />
-                </div>                
-            </div>
-           ${$exeDevices.iDevice.gamification.scorm.addButtonScoreNew(mOptions, this.isInExe)}
-        </div>`;
-        return html;
-    },
-
-    showImagePuzzle: function (num, instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            q = mOptions.puzzlesGame[num],
-            $image = $('#pzlImage-' + instance),
-            $author = $('#pzlAuthor-' + instance);
-
-        $author.hide();
-        if (q.url.length < 4) return false;
-
-        $image.hide();
-        $('#pzlShowNumber-' + instance).hide();
-        $('#pzlShowImage-' + instance).hide();
-
-        $image.attr('alt', q.alt);
-        $image.off('load');
-        $image.off('error');
-        $image
-            .prop('src', q.url)
-            .on('load', function () {
-                $eXePuzzle.handleImageLoad(this, instance, q);
-                if (q.showImage) $('#pzlShowImage-' + instance).show();
-                if (q.showNumber) $('#pzlShowNumber-' + instance).show();
-            })
-            .on('error', function () {
-                return false;
-            });
-    },
-
-    handleImageLoad: function (image, instance, q) {
-        const mOptions = $eXePuzzle.options[instance];
-
-        if (
-            !image.complete ||
-            typeof image.naturalWidth == 'undefined' ||
-            image.naturalWidth == 0
-        )
-            return false;
-
-        const mData = $eXePuzzle.placeImageWindows(
-            image.naturalWidth,
-            image.naturalHeight,
-            instance
-        );
-        q.data = mData;
-
-        $eXePuzzle.drawImage('#pzlImagePuzzle-' + instance, image, mData);
-
-        $eXePuzzle.placePuzzlePieces(mData, instance);
-
-        const $author = $('#pzlAuthor-' + instance);
-        if (q.audioDefinition && q.audioDefinition.length > 4) {
-            if (!mOptions.audiofirst)
-                $exeDevices.iDevice.gamification.media.playSound(
-                    q.audioDefinition
+    updateTime: function (tiempo, instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            mTime =
+                $exeDevices.iDevice.gamification.helpers.getTimeToString(
+                    tiempo
                 );
-            $('#pzlAudioDef-' + instance).css('display', 'block');
-        }
-
-        if (q.author.length > 0) {
-            $author.show();
-        }
-        if (q.alt.length > 0) {
-            $(image).prop('alt', q.alt);
-        }
-
-        $(image).hide();
-
-        return true;
+        if (mOptions.time < 0) return;
+        $(`#rlcPTime-${instance}`).text(mTime);
     },
 
-    placePuzzlePieces: function (mData, instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            q = mOptions.puzzlesGame[mOptions.active],
-            width = mData.w,
-            height = mData.h,
-            cols = q.columns,
-            rows = q.rows,
-            classPiece = q.type == 0 ? 'PZLP-Tile' : 'PZLP-TileChange';
+    clearHtml: function (htmlString) {
+        const tempDiv = $('<div>').html(htmlString);
+        return tempDiv.text();
+    },
 
-        q.parts = [];
-        q.tileSizeX = Math.round(width / cols);
-        q.tileSizeY = Math.round(height / rows);
-        q.emptyX = cols - 1;
-        q.emptyY = rows - 1;
+    createCards: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            shuffledWords = $exeDevices.iDevice.gamification.helpers.shuffleAds(
+                [...mOptions.cardsGame]
+            ),
+            shuffledDefinitions =
+                $exeDevices.iDevice.gamification.helpers.shuffleAds([
+                    ...mOptions.cardsGame,
+                ]);
 
-        let z = 0;
-        $('#pzlImagePuzzle-' + instance)
-            .find('.PZLP-Tile')
-            .remove();
-        $('#pzlImagePuzzle-' + instance)
-            .find('.PZLP-TileChange')
-            .remove();
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                const x = j * q.tileSizeX,
-                    y = i * q.tileSizeY;
-                if (q.type == 0 && i === rows - 1 && j === cols - 1) {
-                    q.parts.push(null);
-                    continue;
-                }
-                $('#pzlImagePuzzle-' + instance).append(`
-                <div id="pzlTile${instance}-${z}" class="${classPiece}" data-index="${z}" data-x="${j}" data-y="${i}" data-x1="${j}" data-y1="${i}" style="
-                  left: ${x}px; 
-                  top: ${y}px; 
-                  background-image: url('${q.url}');
-                  background-size: ${width}px ${height}px;
-                  width: ${q.tileSizeX}px; 
-                  height: ${q.tileSizeY}px;
-                  background-position: -${x}px -${y}px;"><span class="PZLP-NumberShow">${z + 1}</span>
-                </div>
-            `);
-                q.parts.push({ x: j, y: i, id: z });
-                z++;
-            }
+        $('#rlcContainerWords-' + instance).empty();
+        $('#rlcContainerDefinitions-' + instance).empty();
+
+        shuffledWords.forEach((card, index) => {
+            let imgV = card.url.length > 3 ? 'block' : 'none';
+            let txtV = card.eText.length > 0 ? 'flex' : 'none';
+            let imgW = card.eText.length == 0 ? '100%' : '30%';
+
+            imgW = card.url.length < 3 ? '0%' : imgW;
+
+            let txtW = card.url.length < 3 ? '100%' : '70%';
+            txtW = card.eText.length == 0 ? '0%' : txtW;
+            let color = card.color.length > 2 ? card.color : 'inherit';
+            let bkcolor =
+                card.backcolor.length > 2 ? card.backcolor : 'trasparent';
+            let audio = card.audio.length > 3 ? 'block' : 'none';
+            let author = card.author.length > 3 ? 'block' : 'none';
+            let audioCls =
+                card.url.length < 3 && card.eText.length == 0
+                    ? 'RLCP-LinkAudioBig'
+                    : 'RLCP-LinkAudio';
+
+            const fullimage =
+                card.url.length > 3
+                    ? `<a href="#" class="RLCP-FullLinkImage" data-url="${card.url}"" title="${mOptions.msgs.msgFullScreen}">
+                    <strong><span class="sr-av">${mOptions.msgs.msgFullScreen}:</span></strong>
+                    <div  class="exeQuextIcons exeQuextIcons-FullImage RLCP-Activo"></div>
+                </a>`
+                    : '';
+
+            const wordDiv =
+                $(`<div class="RLCP-Word RLCP-NoSelect" data-id="${card.id}" data-lineindex="${card.lineindex}">
+                            <div class="RLCP-ContainerData">
+                              <div class="RLCP-EText" style="display:${txtV}; width:${txtW}; color:${color}; background-color:${bkcolor};"><div class="RLCP-ETextDinamyc">${card.eText}</div></div>    
+                              <div class="RLCP-ImageContain" style="display:${imgV}; width:${imgW};">
+                                  <img src="${card.url}" class="RLCP-Image" data-url="${card.url}" data-x="${card.x}" data-y="${card.y}" alt="${card.alt}" />
+                                  <div class="RLCP-Author RLCP-AuthorWord" data-author="${card.author}"  style="display: ${author};" alt="${card.author}" title="${mOptions.msgs.msgAuthor + ': ' + $eXeRelaciona.clearHtml(card.author)}"><img src="${$eXeRelaciona.idevicePath}exequextcopyright.png"  /></div>
+                                  ${fullimage}
+                                </div>
+                            </div>
+                            <div style="display:${audio}" data-audio="${card.audio}" class="RLCP-TAudio ${audioCls}"  title="Audio"><img src="${$eXeRelaciona.idevicePath}exequextplayaudio.svg" class="RLCP-Audio"  alt="Audio"></div>
+                        </div>`);
+            $('#rlcContainerWords-' + instance).append(wordDiv);
+        });
+
+        shuffledDefinitions.forEach((card, index) => {
+            let imgV = card.urlBk.length > 3 ? 'block' : 'none';
+            let txtV = card.eTextBk.length > 0 ? 'flex' : 'none';
+            let imgW = card.eTextBk.length == 0 ? '100%' : '30%';
+            imgW = card.urlBk.length < 3 ? '0%' : imgW;
+            let txtW = card.urlBk.length < 3 ? '100%' : '70%';
+            txtW = card.eTextBk.length == 0 ? '0%' : txtW;
+            let color = card.colorBk.length > 2 ? card.colorBk : 'inherit';
+            let bkcolor =
+                card.backcolorBk.length > 2 ? card.backcolorBk : 'trasparent';
+            let audio = card.audioBk.length > 3 ? 'block' : 'none';
+            let author = card.authorBk.length > 0 ? 'block' : 'none';
+            let audioCls =
+                card.urlBk.length < 3 && card.eTextBk.length == 0
+                    ? 'RLCP-LinkAudioBig'
+                    : 'RLCP-LinkAudio';
+            const fullimage =
+                card.urlBk.length > 3
+                    ? `<a href="#" class="RLCP-FullLinkImage" data-url="${card.urlBk}"" title="${mOptions.msgs.msgFullScreen}">
+                <strong><span class="sr-av">${mOptions.msgs.msgFullScreen}:</span></strong>
+                <div  class="exeQuextIcons exeQuextIcons-FullImage RLCP-Activo"></div>
+            </a>`
+                    : '';
+            const definitionDiv =
+                $(`<div class="RLCP-Definition RLCP-NoSelect" data-id="${card.id}"  data-lineindex="0" >
+                                <div class="RLCP-ContainerData">
+                                  <div class="RLCP-ImageContain" style="display:${imgV}; width:${imgW};">
+                                    <img src="${card.urlBk}" class="RLCP-Image" data-url="${card.urlBk}" data-x="${card.x}" data-y="${card.y}" alt="${card.altBk}" />
+                                    <div class="RLCP-Author RLCP-AuthorDef" style="display: ${author};" data-author="${card.authorBk}" alt="${card.authorBk}" title="${mOptions.msgs.msgAuthor + ': ' + $eXeRelaciona.clearHtml(card.authorBk)}"><img src="${$eXeRelaciona.idevicePath}exequextcopyright.png"  /></div>
+                                    ${fullimage}
+                                    </div>
+                                  <div class="RLCP-EText" style="display:${txtV}; width:${txtW}; color:${color}; background-color:${bkcolor};"><div class="RLCP-ETextDinamyc">${card.eTextBk}</div></div>
+                                </div>
+                              <div data-audio="${card.audioBk}" style="display:${audio}" class="RLCP-TAudio ${audioCls}" title="Audio"><img src="${$eXeRelaciona.idevicePath}exequextplayaudio.svg" class="FLCDSP-RLCP"  alt="Audio"></div>
+                            </div>`);
+            $('#rlcContainerDefinitions-' + instance).append(definitionDiv);
+        });
+    },
+
+    getID: function () {
+        const randomNumber1 = Math.floor(1000 + Math.random() * 9000),
+            randomNumber2 = Math.floor(1000 + Math.random() * 9000),
+            timestamp = Date.now();
+        return `${randomNumber1}${timestamp}${randomNumber2}`;
+    },
+
+    startGame: function (instance) {
+        let mOptions = $eXeRelaciona.options[instance];
+
+        if (mOptions.gameStarted) return;
+
+        $('#rlcContainerGame-' + instance).show();
+
+        // Fix: Adjust canvas dimensions after showing the container
+        // Without this, the canvas has 0x0 dimensions and arrows don't render
+        $eXeRelaciona.ajustarCanvas(instance);
+
+        $(`#rlcImgTime-${instance}`).hide();
+        $(`#rlcPTime-${instance}`).hide();
+        $(`#rlcButtons-${instance}`).hide();
+        $(`#rlcResetButton-${instance}`).hide();
+
+        if (mOptions.type > 0) {
+            $(`#rlcButtons-${instance}`).css('display', 'flex');
+            $(`#rlcCheckButton-${instance}`).show();
         }
+        mOptions.gameStarted = true;
+        mOptions.solveds = [];
+        mOptions.selecteds = [];
+        mOptions.hits = 0;
+        mOptions.errors = 0;
+        mOptions.score = 0;
+        mOptions.counter = mOptions.time * 60;
+        mOptions.gameOver = false;
+        mOptions.gameStarted = false;
+        mOptions.obtainedClue = false;
 
-        $eXePuzzle.shuffle(instance, cols);
+        $('#rlcPShowClue-' + instance).text('');
+        $('#rlcShowClue-' + instance).hide();
+        $('#rlcPHits-' + instance).text(mOptions.hits);
+        $('#rlcPErrors-' + instance).text(mOptions.errors);
+        $('#rlcCubierta-' + instance).hide();
+        $('#rlcStartGame-' + instance).hide();
+        $('#rlcMessage-' + instance).hide();
 
-        const correct = $eXePuzzle.checkCorrectPlaces(instance);
-        if (correct) {
-            $eXePuzzle.showPuzzle(mOptions.active, instance);
-            return;
-        }
-
-        if (q.showTime > 0) {
-            $('#pzlTime-' + instance).show();
-            if (!$eXePuzzle.isMobile()) $('#pzlImgTime-' + instance).show();
-            mOptions.counter = 0;
-            clearInterval(mOptions.counterClock);
+        if (
+            typeof mOptions != 'undefined' &&
+            mOptions.type == 2 &&
+            mOptions.time > 0
+        ) {
+            $(`#rlcPTime-${instance}`).show();
+            $(`#rlcImgTime-${instance}`).show();
+            let $node = $('#rlcMainContainer-' + instance);
+            let $content = $('#node-content');
             mOptions.counterClock = setInterval(function () {
-                let $node = $('#pzlMainContainer-' + instance);
-                let $content = $('#node-content');
                 if (
                     !$node.length ||
                     ($content.length && $content.attr('mode') === 'edition')
@@ -574,1287 +373,1266 @@ var $eXePuzzle = {
                     clearInterval(mOptions.counterClock);
                     return;
                 }
-                const isvisible = $('#pzlCubierta-' + instance).is(':visible');
-                if (mOptions.gameStarted && !isvisible && !mOptions.loading) {
-                    mOptions.counter++;
-                    $eXePuzzle.uptateTime(mOptions.counter, instance);
+                if (typeof mOptions != 'undefined' && mOptions.gameStarted) {
+                    mOptions.counter--;
+                    $eXeRelaciona.updateTime(mOptions.counter, instance);
+                    if (mOptions.counter <= 0) {
+                        $eXeRelaciona.gameOver(instance);
+                        return;
+                    }
                 }
             }, 1000);
+            $eXeRelaciona.updateTime(mOptions.time * 60, instance);
         }
 
-        if (q.showAttemps) {
-            $('#pzlAttemps-' + instance).show();
-            $('#pzlImgAttemps-' + instance).show();
-        }
-
-        mOptions.lastwidth = 0;
         mOptions.gameStarted = true;
-        mOptions.gameActived = false;
+    },
+    redibujarLineas: function (instance, isMoving) {
+        const mOptions = $eXeRelaciona.options[instance];
+        if (!mOptions) return;
+        mOptions._moving = !!isMoving;
+        $eXeRelaciona.requestRedraw(instance);
     },
 
-    debounce: function (func, wait) {
-        let timeout;
-        return function (...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    },
-
-    onContainerResize(instance, entries) {
-        const mOptions = $eXePuzzle.options[instance];
-        for (let entry of entries) {
-            if (entry.target.id === 'pzlGameContainer-' + instance) {
-                const isvisible = $('#pzlGameContainer-' + instance).is(
-                    ':visible'
-                );
-                if (
-                    typeof mOptions == 'undefined' ||
-                    !mOptions.gameStarted ||
-                    !isvisible
-                )
-                    return;
-                $eXePuzzle.resizePuzzlePieces(instance);
-            }
-        }
-    },
-
-    showCompletedWindows: function (instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            q = mOptions.puzzlesGame[mOptions.active],
-            ms = q.clue && q.clue.length > 0 ? q.clue : '',
-            mr =
-                mOptions.active == mOptions.puzzlesGame.length - 1
-                    ? mOptions.msgs.msgsTerminate
-                    : mOptions.msgs.msgsNext,
-            wd = `<div class="PZLP-Completed">
-        <div class="PZLP-CompletedLeft">
-            <img src="${$eXePuzzle.idevicePath}exequextlost.png" alt="${mOptions.msgs.msgsCompletedPuzzle}">
-        </div>
-        <div class="PZLP-CompletedRight">
-            <div class="PZLP-CompletedText">
-                <p>${mOptions.msgs.msgsCompletedPuzzle}</p>
-                <p>${ms}</p>
-            </div>
-            <div class="PZLP-CompletedButtons">
-                <button type="button" class="PZLP-RepeatPuzzle btn btn-primary">${mOptions.msgs.msgsRepeat}</button>
-                <button type="button" class="PZLP-NextPuzzle btn btn-primary">${mr}</button>
-            </div>
-        </div>
-    </div>`;
-
-        $('#pzlImagePuzzle-' + instance)
-            .find('.PZLP-Completed')
-            .remove();
-        $('#pzlImagePuzzle-' + instance).append(wd);
-        $('#pzlImagePuzzle-' + instance)
-            .find('.PZLP-Completed')
-            .hide();
-        $('#pzlImagePuzzle-' + instance)
-            .find('.PZLP-Completed')
-            .fadeIn();
-        $eXePuzzle.updateScore(true, instance);
-    },
-
-    resizePuzzlePieces: function (instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            q = mOptions.puzzlesGame[mOptions.active];
-
-        if (typeof q == 'undefined' || typeof q.data == 'undefined') return;
-
-        mOptions.lastwidth =
-            mOptions.lastwidth === 0 ? q.data.wm : mOptions.lastwidth;
-        if ($eXePuzzle.isMobile()) {
-            mOptions.lastwidth = $('#pzlMultimedia-' + instance).width();
-        }
-
-        let cols = q.columns,
-            wid = $('#pzlImagePuzzle-' + instance).width(),
-            hid = $('#pzlImagePuzzle-' + instance).height(),
-            wm = $('#pzlMultimedia-' + instance).width(),
-            xp = wm / mOptions.lastwidth,
-            width = xp * wid,
-            height = xp * hid,
-            rows = q.rows,
-            newWidth = Math.round(width / cols),
-            newHeight = Math.round(height / rows),
-            left = Math.round((wm - width) / 2),
-            pieceClass = q.type == 0 ? '.PZLP-Tile' : '.PZLP-TileChange';
-
-        mOptions.lastwidth = $('#pzlMultimedia-' + instance).width();
-
-        $('#pzlImagePuzzle-' + instance).css({
-            width: Math.round(xp * wid) + 'px',
-            height: Math.round(xp * hid) + 'px',
-            top: 0,
-            left: left + 'px',
-        });
-
-        $('#pzlImage-' + instance).css({
-            width: Math.round(xp * wid) + 'px',
-            height: Math.round(xp * hid) + 'px',
-            top: 0,
-            left: left + 'px',
-        });
-
-        q.tileSizeX = newWidth;
-        q.tileSizeY = newHeight;
-        $('#pzlImagePuzzle-' + instance)
-            .find(pieceClass)
-            .each(function () {
-                const $piece = $(this),
-                    colIndex = $piece.data('x1'),
-                    rowIndex = $piece.data('y1'),
-                    x = $piece.data('x') * newWidth,
-                    y = $piece.data('y') * newHeight,
-                    backgroundPositionX = -colIndex * newWidth + 'px',
-                    backgroundPositionY = -rowIndex * newHeight + 'px';
-
-                $piece.css({
-                    left: x + 'px',
-                    top: y + 'px',
-                    'background-image': `url("${q.url}")`,
-                    'background-position':
-                        backgroundPositionX + ' ' + backgroundPositionY,
-                    'background-size': `${width}px ${height}px`,
-                    width: newWidth + 'px',
-                    height: newHeight + 'px',
-                });
-            });
-    },
-
-    adjustImageDivHeight: function (instance) {
-        const $imageDiv = $('#pzlImageDiv-' + instance);
-        const $imagePuzzle = $('#pzlImagePuzzle-' + instance);
-        const $image = $('#pzlImage-' + instance);
-
-        if ($imagePuzzle.length && $image.length) {
-            const puzzleWidth = $imagePuzzle.width();
-            const puzzleHeight = $imagePuzzle.height();
-
-            if (puzzleWidth > 0 && puzzleHeight > 0) {
-                const containerWidth = $imageDiv.width();
-                const aspectRatio = puzzleHeight / puzzleWidth;
-                const calculatedHeight = containerWidth * aspectRatio;
-
-                $imageDiv.css({
-                    height: calculatedHeight + 'px',
-                    'padding-top': '0',
-                });
-            }
-        }
-    },
-
-    showSholution: function (instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            q = mOptions.puzzlesGame[mOptions.active],
-            $pzlImagePuzzle = $('#pzlImagePuzzle-' + instance),
-            cols = q.columns,
-            rows = q.rows,
-            pieceClass = q.type == 0 ? 'PZLP-Tile' : 'PZLP-TileChange',
-            url = q.url;
-
-        let tileSizeX =
-            q && !isNaN(q.tileSizeX) && q.tileSizeX > 0
-                ? Math.round(q.tileSizeX)
-                : q.data && q.data.w
-                  ? Math.round(q.data.w / cols)
-                  : Math.round(($pzlImagePuzzle.width() || 0) / cols);
-        let tileSizeY =
-            q && !isNaN(q.tileSizeY) && q.tileSizeY > 0
-                ? Math.round(q.tileSizeY)
-                : q.data && q.data.h
-                  ? Math.round(q.data.h / rows)
-                  : Math.round(($pzlImagePuzzle.height() || 0) / rows);
-
-        if (!tileSizeX || tileSizeX <= 0) tileSizeX = 1;
-        if (!tileSizeY || tileSizeY <= 0) tileSizeY = 1;
-
-        let width = tileSizeX * cols;
-        let height = tileSizeY * rows;
-
-        $pzlImagePuzzle.css({ width: width + 'px', height: height + 'px' });
-
-        let z = 0;
-
-        $('#pzlImage-' + instance).css({ opacity: '0.2', display: 'block' });
-        $pzlImagePuzzle.find('.' + pieceClass).remove();
-
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                const x = j * tileSizeX,
-                    y = i * tileSizeY,
-                    bgPosX = -j * tileSizeX,
-                    bgPosY = -i * tileSizeY;
-
-                $pzlImagePuzzle.append(`
-                <div id="pzlTile${instance}-${z}" class="${pieceClass}" data-index="${z}" data-x="${j}" data-y="${i}" data-x1="${j}" data-y1="${i}" style="
-                  left: ${x}px; 
-                  top: ${y}px; 
-                  background-image: url('${url}');
-                  background-size: ${width}px ${height}px;
-                  width: ${tileSizeX}px; 
-                  height: ${tileSizeY}px;
-                  background-position: ${bgPosX}px ${bgPosY}px;
-                  opacity: 0;
-                  z-index: 12;
-                  transition: opacity 0.3s ease;">
-                  <span class="PZLP-NumberShow">${z + 1}</span>
-                </div>`);
-                z++;
-            }
-        }
-
-        const ns = $eXePuzzle.generateRandomArray(z);
-        let counter = 0;
-        const counterClock = setInterval(() => {
-            let $node = $('#pzlMainContainer-' + instance);
-            let $content = $('#node-content');
-            if (
-                !$node.length ||
-                ($content.length && $content.attr('mode') === 'edition')
-            ) {
-                clearInterval(counterClock);
-                return;
-            }
-
-            if (counter < z)
-                $(`#pzlTile${instance}-${ns[counter]}`).css({ opacity: 1 });
-            else {
-                clearInterval(counterClock);
-                $('#pzlImage-' + instance).css({
-                    opacity: '1',
-                    display: 'none',
-                });
-                setTimeout(function () {
-                    $eXePuzzle.showCompletedWindows(instance);
-                }, 300);
-            }
-            counter++;
-        }, 300);
-    },
-
-    generateRandomArray: function (num) {
-        const array = Array.from({ length: num }, (_, i) => i);
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    },
-
-    shuffle: function (instance, columns) {
-        const mOptions = $eXePuzzle.options[instance],
-            q = mOptions.puzzlesGame[mOptions.active];
-
-        for (let i = q.parts.length - 2; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [q.parts[i], q.parts[j]] = [q.parts[j], q.parts[i]];
-        }
-
-        if (q.type == 0 && !$eXePuzzle.isSolvable(q.parts, columns)) {
-            for (let i = 0; i < q.parts.length - 1; i++) {
-                if (
-                    q.parts[i] &&
-                    q.parts[i + 1] &&
-                    q.parts[i].id > q.parts[i + 1].id
-                ) {
-                    [q.parts[i], q.parts[i + 1]] = [q.parts[i + 1], q.parts[i]];
-                    break;
-                }
-            }
-        }
-
-        q.parts.forEach((part, index) => {
-            if (part) {
-                const tile = $(`#pzlTile${instance}-${index}`),
-                    x = part.x,
-                    y = part.y;
-                tile.data({ x: x, y: y }).css({
-                    left: `${x * q.tileSizeX}px`,
-                    top: `${y * q.tileSizeY}px`,
-                });
-            }
+    requestRedraw: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        if (!mOptions || !mOptions.canvas || !mOptions.contexto) return;
+        if (mOptions._rafPending) return;
+        mOptions._rafPending = true;
+        const raf =
+            typeof requestAnimationFrame !== 'undefined'
+                ? requestAnimationFrame
+                : function (cb) {
+                      return setTimeout(cb, 16);
+                  };
+        raf(() => {
+            mOptions._rafPending = false;
+            $eXeRelaciona._drawLines(instance);
         });
     },
 
-    isSolvable: function (parts, columns) {
-        let inversions = 0,
-            emptyRow = 0;
+    _drawLines: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        if (!mOptions || !mOptions.canvas || !mOptions.contexto) return;
+        const ctx = mOptions.contexto;
+        const canvasRect = mOptions.canvas.getBoundingClientRect();
+        const dpr = mOptions._dpr || Math.max(window.devicePixelRatio || 1, 1);
+        const cssW = mOptions._cssW
+            ? mOptions._cssW
+            : mOptions.canvas.width / dpr;
+        const cssH = mOptions._cssH
+            ? mOptions._cssH
+            : mOptions.canvas.height / dpr;
+        ctx.clearRect(0, 0, cssW, cssH);
 
-        parts.forEach((currentPart, index) => {
-            if (currentPart && currentPart.id !== null) {
-                for (let j = index + 1; j < parts.length; j++) {
-                    if (
-                        parts[j] &&
-                        parts[j].id !== null &&
-                        currentPart.id > parts[j].id
-                    )
-                        inversions++;
-                }
-            }
+        ctx.lineWidth = $eXeRelaciona.isMobile() ? 3 : 5;
+
+        mOptions.linesMap.forEach((line) => {
+            const startRect = line.start[0].getBoundingClientRect();
+            const endRect = line.end[0].getBoundingClientRect();
+            const x1 = startRect.right - canvasRect.left;
+            const y1 = startRect.top + startRect.height / 2 - canvasRect.top;
+            const x2 = endRect.left - canvasRect.left;
+            const y2 = endRect.top + endRect.height / 2 - canvasRect.top;
+            $eXeRelaciona.dibujaLineaCurva(ctx, x1, y1, x2, y2, line.color);
         });
 
-        return columns % 2 === 0
-            ? (inversions + emptyRow) % 2 === 0
-            : inversions % 2 === 0;
-    },
-
-    checkCorrectPlaces: function (instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            q = mOptions.puzzlesGame[mOptions.active],
-            cols = q.columns,
-            classPieee = q.type == 0 ? '.PZLP-Tile' : '.PZLP-TileChange';
-        let isSolved = true;
-
-        $('#pzlGameContainer-' + instance)
-            .find(classPieee)
-            .each(function () {
-                const $tile = $(this),
-                    index = $tile.data('index'),
-                    expectedX = index % cols,
-                    expectedY = Math.floor(index / cols),
-                    currentX = $tile.data('x'),
-                    currentY = $tile.data('y');
-                if (expectedX !== currentX || expectedY !== currentY) {
-                    isSolved = false;
-                    return false;
-                }
-            });
-
-        return isSolved;
-    },
-
-    checkIfSolved: function (instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            q = mOptions.puzzlesGame[mOptions.active],
-            isSolved = $eXePuzzle.checkCorrectPlaces(instance);
-
-        mOptions.loading = false;
-        if (
-            mOptions.attemps == 0 &&
-            q.audioDefinition.length > 4 &&
-            mOptions.audiofirst
-        )
-            $exeDevices.iDevice.gamification.media.playSound(
-                q.audioDefinition
+        if (mOptions._moving && mOptions.currentWordDiv) {
+            const startRect =
+                mOptions.currentWordDiv[0].getBoundingClientRect();
+            const x1 = startRect.right - canvasRect.left;
+            const y1 = startRect.top + startRect.height / 2 - canvasRect.top;
+            const x2 =
+                typeof mOptions._tempX === 'number'
+                    ? mOptions._tempX - canvasRect.left
+                    : x1;
+            const y2 =
+                typeof mOptions._tempY === 'number'
+                    ? mOptions._tempY - canvasRect.top
+                    : y1;
+            $eXeRelaciona.dibujaLineaCurva(
+                ctx,
+                x1,
+                y1,
+                x2,
+                y2,
+                $eXeRelaciona.borderColors.blue
             );
-
-        mOptions.attemps++;
-        $('#pzlAttemps-' + instance).text(mOptions.attemps);
-
-        if (isSolved) {
-            mOptions.gameActived = true;
-            if (q.audioClue && q.audioClue.length > 4) {
-                $eXePuzzle.stopAllSounds(instance);
-                $('#pzlAudioClue-' + instance).css('display', 'block');
-                $exeDevices.iDevice.gamification.media.playSound(
-                    q.audioClue
-                );
-            }
-            $eXePuzzle.showSholution(instance);
-            if (mOptions.isScorm == 1) {
-                const score = (
-                    (mOptions.hits * 10) /
-                    mOptions.puzzlesGame.length
-                ).toFixed(2);
-                $eXePuzzle.sendScore(true, instance);
-                $('#pzlRepeatActivity-' + instance).text(
-                    `${mOptions.msgs.msgYouScore}: ${score}`
-                );
-                $eXePuzzle.initialScore = score;
-            }
-            clearInterval(mOptions.counterClock);
         }
     },
 
-    drawImage: function (div, image, mData) {
-        $(image).css({
-            position: 'absolute',
-            left: `${mData.x}px`,
-            top: 0,
-            width: `${mData.w}px`,
-            height: `${mData.h}px`,
-        });
-        $(div).css({
-            position: 'absolute',
-            left: `${mData.x}px`,
-            top: 0,
-            width: `${mData.w}px`,
-            height: `${mData.h}px`,
-        });
+    createInterfaceCards: function (instance) {
+        const path = $eXeRelaciona.idevicePath,
+            msgs = $eXeRelaciona.options[instance].msgs,
+            mOptions = $eXeRelaciona.options[instance],
+            html = `
+        <div class="RLCP-MainContainer" id="rlcMainContainer-${instance}">
+            <div class="RLCP-GameMinimize" id="rlcGameMinimize-${instance}">
+                <a href="#" class="RLCP-LinkMaximize" id="rlcLinkMaximize-${instance}" title="${msgs.msgMaximize}">
+                    <img src="${path}relacionaIcon.png" class="RLCP-IconMinimize RLCP-Activo" alt="">
+                    <div class="RLCP-MessageMaximize" id="rlcMessageMaximize-${instance}">${msgs.msgPlayStart}</div>
+                </a>
+            </div>
+            <div class="RLCP-GameContainer" id="rlcGameContainer-${instance}">
+                <div class="RLCP-GameScoreBoard" id="rlcGameScoreBoard-${instance}">
+                    <div class="RLCP-GameScores" id="rlcGameScores-${instance}">
+                        <div class="exeQuextIcons exeQuextIcons-Number" id="rlcPNumberIcon-${instance}" title="${msgs.msgNumQuestions}"></div>
+                        <p><span class="sr-av">${msgs.msgNumQuestions}: </span><span id="rlcPNumber-${instance}">0</span></p>
+                        <div class="exeQuextIcons exeQuextIcons-Hit" title="${msgs.msgHits}"></div>
+                        <p><span class="sr-av">${msgs.msgHits}: </span><span id="rlcPHits-${instance}">0</span></p>
+                        <div class="exeQuextIcons exeQuextIcons-Error" title="${msgs.msgErrors}"></div>
+                        <p><span class="sr-av">${msgs.msgErrors}: </span><span id="rlcPErrors-${instance}">0</span></p>
+                        <div class="exeQuextIcons exeQuextIcons-Score" title="${msgs.msgScore}"></div>
+                        <p><span class="sr-av">${msgs.msgScore}: </span><span id="rlcPScore-${instance}">0</span></p>
+                    </div>
+                    <div class="RLCP-Info" id="rlcInfo-${instance}"></div>
+                    <div class="RLCP-TimeNumber">
+                        <strong><span class="sr-av">${msgs.msgTime}:</span></strong>
+                        <div class="exeQuextIcons exeQuextIcons-Time" style="display:none" id="rlcImgTime-${instance}" title="${msgs.msgTime}"></div>
+                        <p id="rlcPTime-${instance}" style="display:none" class="RLCP-PTime">00:00</p>
+                        <a href="#" class="RLCP-LinkMinimize" id="rlcLinkMinimize-${instance}" title="${msgs.msgMinimize}">
+                            <strong><span class="sr-av">${msgs.msgMinimize}:</span></strong>
+                            <div class="exeQuextIcons exeQuextIcons-Minimize RLCP-Activo"></div>
+                        </a>
+                        <a href="#" class="RLCP-LinkFullScreen" id="rlcLinkFullScreen-${instance}" title="${msgs.msgFullScreen}">
+                            <strong><span class="sr-av">${msgs.msgFullScreen}:</span></strong>
+                            <div class="exeQuextIcons exeQuextIcons-FullScreen RLCP-Activo" id="rlcFullScreen-${instance}"></div>
+                        </a>
+                    </div>
+                </div>
+                <div class="RLCP-Information">
+                    <a href="#" style="display:none" id="rlcStartGame-${instance}">${msgs.msgPlayStart}</a>
+                    <p class="RLCP-Message" id="rlcMessage-${instance}"></p>
+                </div>
+                <div id="rlcButtons-${instance}" class="RLCP-Buttons">
+                    <a href="#" class="RLCP-ResetButton" id="rlcResetButton-${instance}">${msgs.msgRestart}</a>
+                    <a href="#" class="RLCP-CheckButton" id="rlcCheckButton-${instance}">${msgs.msgCheck}</a>
+                </div>
+                <div class="RLCP-Multimedia" id="rlcMultimedia-${instance}">
+                    ${$eXeRelaciona.getMainHtml(instance)}                        
+                </div>
+                <div class="RLCP-AuthorGame" id="rlcAuthorGame-${instance}"></div>
+            </div>
+            <div class="RLCP-Cover" id="rlcCubierta-${instance}">
+                <div class="RLCP-CodeAccessDiv" id="rlcCodeAccessDiv-${instance}">
+                    <div class="RLCP-MessageCodeAccessE" id="rlcMesajeAccesCodeE-${instance}"></div>
+                    <div class="RLCP-DataCodeAccessE">
+                        <label class="sr-av">${msgs.msgCodeAccess}:</label>
+                        <input type="text" class="RLCP-CodeAccessE form-control" id="rlcCodeAccessE-${instance}" placeholder="${msgs.msgCodeAccess}">
+                        <a href="#" id="rlcCodeAccessButton-${instance}" title="${msgs.msgSubmit}">
+                            <strong><span class="sr-av">${msgs.msgSubmit}</span></strong>
+                            <div class="exeQuextIcons-Submit RLCP-Activo"></div>
+                        </a>
+                    </div>
+                </div>
+                <div class="RLCP-ShowClue" id="rlcShowClue-${instance}">
+                    <p class="sr-av">${msgs.msgClue}</p>
+                    <p class="RLCP-PShowClue" id="rlcPShowClue-${instance}"></p>
+                    <a href="#" class="RLCP-ClueBotton" id="rlcClueButton-${instance}" title="${msgs.msgClose}">${msgs.msgClose}</a>
+                </div>
+            </div>
+        </div>
+        ${$exeDevices.iDevice.gamification.scorm.addButtonScoreNew(mOptions, this.isInExe)}
+    `;
+        return html;
     },
 
-    saveEvaluation: function (instance) {
-        const mOptions = $eXePuzzle.options[instance];
-        mOptions.scorerp = (mOptions.hits * 10) / mOptions.numberQuestions;
-        $exeDevices.iDevice.gamification.report.saveEvaluation(
-            mOptions,
-            $eXePuzzle.isInExe
+    getMainHtml: function (instance) {
+        let html = `<div class="RLCP-Main">
+                <div id="rlcContainerGame-${instance}" class="RLCP-ContainerGame">
+                    <div id="rlcContainerWords-${instance}" class="RLCP-ContainerWords"></div>
+                    <div id="rlcContainerDefinitions-${instance}" class="RLCP-ContainerDefinitions"></div>
+                </div>
+                <canvas id="rlcCanvas-${instance}" width="800" height="600" class="RLCP-Canvas"></canvas>
+            </div>`;
+        return html;
+    },
+
+    hexToRgba: function (hex, opacity) {
+        const r = parseInt(hex.slice(1, 3), 16),
+            g = parseInt(hex.slice(3, 5), 16),
+            b = parseInt(hex.slice(5, 7), 16),
+            opacity1 = Math.min(Math.max(opacity, 0), 1);
+        return `rgba(${r}, ${g}, ${b}, ${opacity1})`;
+    },
+
+    shuffleElements: function (parentElement) {
+        const children = parentElement.children().get(),
+            shuffledChildren =
+                $exeDevices.iDevice.gamification.helpers.shuffleAds(children);
+        parentElement.empty().append(shuffledChildren);
+    },
+
+    gameOver: function (instance) {
+        $eXeRelaciona.checkState(instance);
+    },
+
+    showScoreFooter: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            score = (mOptions.hits * 10) / mOptions.realNumberCards,
+            formattedScore = Number(score).toFixed(2);
+
+        $(`#rlcRepeatActivity-${instance}`).text(
+            `${mOptions.msgs.msgYouScore}: ${formattedScore}`
+        );
+
+        return formattedScore;
+    },
+
+    showScoreGame: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            msgs = mOptions.msgs,
+            score = ((mOptions.hits * 10) / mOptions.numberCards).toFixed(2);
+        let message = msgs.msgEndGameM.replace('%s', score),
+            messageColor = 0,
+            clueMessage = '';
+
+        $eXeRelaciona.showMessage(messageColor, message, instance, true);
+
+        if (mOptions.itinerary.showClue) {
+            if (score * 100 > mOptions.itinerary.percentageClue) {
+                clueMessage = mOptions.itinerary.clueGame;
+            } else {
+                clueMessage = msgs.msgTryAgain.replace(
+                    '%s',
+                    mOptions.itinerary.percentageClue
+                );
+            }
+            $eXeRelaciona.showMessage(3, clueMessage, instance, true);
+        }
+
+        const sscore = (
+            (mOptions.hits * 10) /
+            mOptions.cardsGame.length
+        ).toFixed(2);
+        $(`#rlcPScore-${instance}`).text(sscore);
+        $(`#rlcPHits-${instance}`).text(mOptions.hits);
+        $(`#rlcPErrors-${instance}`).text(mOptions.errors);
+        $(`#rlcPNumber-${instance}`).text(
+            mOptions.realNumberCards - mOptions.hits - mOptions.errors
         );
     },
 
-    sendScore: function (auto, instance) {
-        const mOptions = $eXePuzzle.options[instance];
-
-        mOptions.scorerp = (mOptions.hits * 10) / mOptions.numberQuestions;
-        mOptions.previousScore = $eXePuzzle.previousScore;
-        mOptions.userName = $eXePuzzle.userName;
-
-        $exeDevices.iDevice.gamification.scorm.sendScoreNew(auto, mOptions);
-
-        $eXePuzzle.previousScore = mOptions.previousScore;
+    showClue: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            percentageHits = (mOptions.hits * 10) / mOptions.cardsGame.length;
+        if (mOptions.itinerary.showClue) {
+            if (percentageHits >= mOptions.itinerary.percentageClue) {
+                if (!mOptions.obtainedClue) {
+                    mOptions.obtainedClue = true;
+                    const msg = `${mOptions.msgs.msgInformation}: ${mOptions.itinerary.clueGame}`;
+                    $(`#rlcPShowClue-${instance}`).text(msg);
+                    $(`#rlcShowClue-${instance}`).show();
+                    $(`#rlcCubierta-${instance}`).show();
+                }
+            }
+        }
     },
 
-    clear: function (puzzle) {
-        return puzzle.replace(/[&\s\n\r]+/g, ' ').trim();
+    reboot: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        mOptions.hits = 0;
+        mOptions.errors = 0;
+        mOptions.score = 0;
+        mOptions.active = 0;
+        mOptions.obtainedClue = false;
+        $('#rlcButtons-' + instance).hide();
+        $eXeRelaciona.rebootCards(instance);
+        $eXeRelaciona.showScoreGame(instance);
+        mOptions.gameStarted = true;
+        mOptions.gameOver = false;
+        const nodeGame = document.querySelector('#rlcContainerGame-' + instance);
+        if (nodeGame) {
+            if ($exeDevices.iDevice.gamification.math.hasLatex(nodeGame.innerHTML)) {
+                $exeDevices.iDevice.gamification.math.updateLatex(
+                    '#rlcContainerGame-' + instance,
+                );
+            }
+        }
+        $('#rlcMessage-' + instance).hide();
+    },
+
+    rebootCards: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+
+        const $container = $(`#rlcGameContainer-${instance}`);
+        $container
+            .find('.RLCP-Word, .RLCP-Definition')
+            .removeClass('RLCP-Connected')
+            .removeData('lineindex');
+
+        mOptions.linesMap.clear();
+        mOptions.currentWordDiv = null;
+        if (mOptions.tempEnd) {
+            mOptions.tempEnd.remove();
+            mOptions.tempEnd = null;
+        }
+
+        $eXeRelaciona.ajustarCanvas(instance);
+        $eXeRelaciona.redibujarLineas(instance, false);
+
+        $eXeRelaciona.createCards(instance);
+        $eXeRelaciona.showScoreGame(instance);
+
+        if (mOptions.type == 2) {
+            mOptions.counter = mOptions.time * 60;
+            $eXeRelaciona.startGame(instance);
+        }
+    },
+
+    checkState: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+
+        if (typeof mOptions === 'undefined') return;
+
+        clearInterval(mOptions.counterClock);
+        mOptions.gameOver = true;
+        mOptions.gameStarted = false;
+        $eXeRelaciona.checkStateArrows(instance);
+
+        $(`#rlcCheckButton-${instance}`).hide();
+        $(`#rlcButtons-${instance}`).css('display', 'flex');
+        $(`#rlcResetButton-${instance}`).show();
+
+        $exeDevices.iDevice.gamification.media.stopSound();
+        $eXeRelaciona.showScoreGame(instance);
+        $eXeRelaciona.saveEvaluation(instance, true);
+
+        if (mOptions.isScorm === 1) {
+            $eXeRelaciona.sendScore(true, instance);
+            $eXeRelaciona.initialScore =
+                $eXeRelaciona.showScoreFooter(instance);
+        }
+    },
+
+    checkStateArrows: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        mOptions.hits = 0;
+        mOptions.errors = 0;
+
+        mOptions.linesMap.forEach((value, key) => {
+            if (value.correct) {
+                mOptions.hits++;
+                value.color = $eXeRelaciona.borderColors.green;
+            } else {
+                value.color = $eXeRelaciona.borderColors.red;
+                mOptions.errors++;
+            }
+        });
+        $eXeRelaciona.redibujarLineas(instance, false);
     },
 
     removeEvents: function (instance) {
-        const mOptions = $eXePuzzle.options[instance];
-
-        $('#pzlLinkMaximize-' + instance).off('click touchstart');
-        $('#pzlLinkMinimize-' + instance).off('click touchstart');
-        $('#pzlLinkFullScreen-' + instance).off('click touchstart');
-        $('#pzlFeedBackClose-' + instance).off('click');
-        $('#pzlCodeAccessButton-' + instance).off('click touchstart');
-        $('#pzlCodeAccessE-' + instance).off('keydown');
-        $('#pzlStartGameEnd-' + instance).off('click');
-        $('#pzlMainContainer-' + instance)
+        $(`#rlcLinkMaximize-${instance}`).off('click touchstart');
+        $(`#rlcLinkMinimize-${instance}`).off('click touchstart');
+        $(`#rlcCodeAccessButton-${instance}`).off('click touchstart');
+        $(`#rlcCodeAccessE-${instance}`).off('keydown');
+        $(`#rlcSendScore-${instance}`).off('click');
+        $('#rlcMainContainer-' + instance)
             .closest('.idevice_node')
             .off('click', '.Games-SendScore');
-        $('#pzlClueButton-' + instance).off('click');
-        $('#pzlAudioDef-' + instance).off('click');
-        $('#pzlAudioClue-' + instance).off('click');
-        $('#pzlMultimedia-' + instance).off('click', '.PZLP-Tile');
-        $('#pzlImagePuzzle-' + instance).off('click', '.PZLP-TileChange');
-        $('#pzlShowImage-' + instance).off(
-            'mouseenter click touchstart mouseleave touchend'
+
+        $(window).off('unload.eXeRelaciona beforeunload.eXeRelaciona');
+
+        $(document).off('mousemove.eXeRlc' + instance);
+        $(document).off('mouseup.eXeRlc' + instance);
+
+        $(`#rlcClueButton-${instance}`).off('click');
+        $(`#rlcStartGame-${instance}`).off('click');
+        $(`#rlcLinkFullScreen-${instance}`).off('click touchstart');
+        $(`#rlcResetButton-${instance}`).off('click');
+        $(`#rlcCheckButton-${instance}`).off('click');
+        $(`#rlcGameContainer-${instance}`).off(
+            'mouseenter touchstart',
+            '.RLCP-Author'
         );
-        $('#pzlShowNumber-' + instance).off('click touchstart');
-        $('#pzlImagePuzzle-' + instance).off('click', '.PZLP-NextPuzzle');
-        $('#pzlImagePuzzle-' + instance).off('click', '.PZLP-RepeatPuzzle');
-
-        $(window).off('unload.eXePuzzle beforeunload.eXePuzzle');
-
-        let container = document.getElementById('pzlGameContainer-' + instance);
-        if (container && mOptions.resizeObserver) {
-            mOptions.resizeObserver.unobserve(container);
-        }
-
-        if (mOptions._fsBound && mOptions._fsHandler) {
-            [
-                'fullscreenchange',
-                'webkitfullscreenchange',
-                'mozfullscreenchange',
-                'MSFullscreenChange',
-            ].forEach(function (evt) {
-                document.removeEventListener(evt, mOptions._fsHandler);
-            });
-            mOptions._fsBound = false;
-            mOptions._fsHandler = null;
-        }
+        $(`#rlcGameContainer-${instance}`).off(
+            'mouseleave touchend touchcancel',
+            '.RLCP-Author'
+        );
+        $(`#rlcGameContainer-${instance}`).off(
+            'click touchstart',
+            '.RLCP-TAudio'
+        );
     },
 
     addEvents: function (instance) {
-        const mOptions = $eXePuzzle.options[instance];
+        const mOptions = $eXeRelaciona.options[instance];
+        const $rlcGameContainer = $('#rlcGameContainer-' + instance);
 
-        $('#pzlAudioDef-' + instance).hide();
-        $('#pzlAudioClue-' + instance).hide();
-        $('#pzlShowClue-' + instance).hide();
-        $('#pzlPHits-' + instance).text(mOptions.hits);
-        $('#pzlPNumber-' + instance).text(mOptions.numberQuestions);
-        $('#pzlPScore-' + instance).text(mOptions.score);
-        $('#pzlPErrors-' + instance).text(mOptions.errors);
-        $('#pzlCubierta-' + instance).hide();
-        $('#pzlGameOver-' + instance).hide();
-        $('#pzlTime-' + instance).hide();
-        $('#pzlImgTime-' + instance).hide();
-        $('#pzlAttemps-' + instance).hide();
-        $('#pzlImgAttemps-' + instance).hide();
-        $('#pzlCubierta-' + instance).hide();
-        $('#pzlGameOver-' + instance).hide();
-        $('#pzlCodeAccessDiv-' + instance).hide();
+        $eXeRelaciona.removeEvents(instance);
 
-        $('#pzlLinkMaximize-' + instance).on('click touchstart', function (e) {
+        $('#rlcMainContainer-' + instance)
+            .closest('.idevice_node')
+            .on('click', '.Games-SendScore', function (e) {
+                e.preventDefault();
+                $eXeRelaciona.sendScore(false, instance);
+                $eXeRelaciona.saveEvaluation(instance);
+            });
+
+        $('#rlcLinkMaximize-' + instance).on('click touchstart', function (e) {
             e.preventDefault();
-            $('#pzlGameContainer-' + instance).show();
-            $('#pzlGameMinimize-' + instance).hide();
+            $rlcGameContainer.show();
+            $('#rlcGameMinimize-' + instance).hide();
         });
 
-        $('#pzlLinkMinimize-' + instance).on('click touchstart', function (e) {
+        $('#rlcLinkMinimize-' + instance).on('click touchstart', function (e) {
             e.preventDefault();
-            $('#pzlGameContainer-' + instance).hide();
-            $('#pzlGameMinimize-' + instance)
+            $rlcGameContainer.hide();
+            $('#rlcGameMinimize-' + instance)
                 .css('visibility', 'visible')
                 .show();
         });
 
-        $('#pzlLinkFullScreen-' + instance).on(
+        $('#rlcCubierta-' + instance).hide();
+        $('#rlcCodeAccessDiv-' + instance).hide();
+
+        $('#rlcCodeAccessButton-' + instance).on(
             'click touchstart',
             function (e) {
                 e.preventDefault();
-                const element = document.getElementById(
-                    'pzlGameContainer-' + instance
-                );
-                $eXePuzzle.bindFullscreenEvents(instance);
-                $exeDevices.iDevice.gamification.helpers.toggleFullscreen(
-                    element,
-                    instance
-                );
+                $eXeRelaciona.enterCodeAccess(instance);
             }
         );
 
-        $('#pzlFeedBackClose-' + instance).on('click', function () {
-            $('#pzlDivFeedBack-' + instance).hide();
-            $('#pzlGameOver-' + instance).show();
-        });
-
-        if (mOptions.itinerary.showCodeAccess) {
-            $('#pzlMesajeAccesCodeE-' + instance).text(
-                mOptions.itinerary.messageCodeAccess
-            );
-            $('#pzlCodeAccessDiv-' + instance).show();
-            $('#pzlCubierta-' + instance).show();
-        }
-
-        $('#pzlCodeAccessButton-' + instance).on(
-            'click touchstart',
-            function (e) {
-                e.preventDefault();
-                $eXePuzzle.enterCodeAccess(instance);
-            }
-        );
-
-        $('#pzlCodeAccessE-' + instance).on('keydown', function (event) {
+        $('#rlcCodeAccessE-' + instance).on('keydown', function (event) {
             if (event.which == 13 || event.keyCode == 13) {
-                $eXePuzzle.enterCodeAccess(instance);
+                $eXeRelaciona.enterCodeAccess(instance);
                 return false;
             }
             return true;
         });
 
-        $('#pzlPNumber-' + instance).text(mOptions.numberQuestions);
+        $('#rlcPNumber-' + instance).text(mOptions.realNumberCards);
 
-        $(window).on('unload.eXePuzzle beforeunload.eXePuzzle', function () {
-            if (typeof $eXePuzzle.mScorm != 'undefined') {
-                $exeDevices.iDevice.gamification.scorm.endScorm(
-                    $eXePuzzle.mScorm
-                );
+        $(window).on(
+            'unload.eXeRelaciona beforeunload.eXeRelaciona',
+            function () {
+                if ($eXeRelaciona.mScorm) {
+                    $exeDevices.iDevice.gamification.scorm.endScorm(
+                        $eXeRelaciona.mScorm
+                    );
+                }
             }
+        );
+
+        $('#rlcSendScore-' + instance).click(function (e) {
+            e.preventDefault();
+            $eXeRelaciona.sendScore(false, instance);
+            $eXeRelaciona.saveEvaluation(instance, true);
         });
+
+        $('#rlcClueButton-' + instance).on('click', function (e) {
+            e.preventDefault();
+            $('#rlcShowClue-' + instance).hide();
+            $('#rlcCubierta-' + instance).fadeOut();
+        });
+
+        $('#rlcPErrors-' + instance).text(mOptions.errors);
+        if (mOptions.author.trim().length > 0 && !mOptions.fullscreen) {
+            $('#rlcAuthorGame-' + instance).html(
+                mOptions.msgs.msgAuthor + ': ' + mOptions.author
+            );
+            $('#rlcAuthorGame-' + instance).show();
+        }
 
         if (mOptions.isScorm > 0) {
             $exeDevices.iDevice.gamification.scorm.registerActivity(mOptions);
         }
 
-        $('#pzlMainContainer-' + instance)
-            .closest('.idevice_node')
-            .on('click', '.Games-SendScore', function (e) {
+        $('#rlcStartGame-' + instance).on('click', function (e) {
+            e.preventDefault();
+            $eXeRelaciona.startGame(instance);
+        });
+
+        $('#rlcLinkFullScreen-' + instance).on(
+            'click touchstart',
+            function (e) {
                 e.preventDefault();
-                $eXePuzzle.sendScore(false, instance);
-                $eXePuzzle.saveEvaluation(instance);
-            });
-
-        $('#pzlStartGameEnd-' + instance).on('click', function (e) {
-            e.preventDefault();
-            $eXePuzzle.showPuzzle(0, instance);
-            $eXePuzzle.startGame(instance);
-            $('#pzlCubierta-' + instance).hide();
-        });
-
-        $('#pzlClueButton-' + instance).on('click', function (e) {
-            e.preventDefault();
-            $('#pzlShowClue-' + instance).hide();
-            $('#pzlCubierta-' + instance).fadeOut();
-        });
-        if (mOptions.time == 0) {
-            $('#pzlTime-' + instance).hide();
-            $('#pzlImgTime-' + instance).hide();
-            $eXePuzzle.uptateTime(0, instance);
-        } else {
-            $eXePuzzle.uptateTime(0 * 60, instance);
-        }
-
-        if (mOptions.author.trim().length > 0 && !mOptions.fullscreen) {
-            $('#pzlAuthorGame-' + instance).html(
-                mOptions.msgs.msgAuthor + ': ' + mOptions.author
-            );
-            $('#pzlAuthorGame-' + instance).show();
-        }
-
-        $('#pzlnextPuzzle-' + instance).hide();
-        $('#pzlShowImage-' + instance).hide();
-        $('#pzlShowNumber-' + instance).hide();
-
-        setTimeout(function () {
-            $exeDevices.iDevice.gamification.report.updateEvaluationIcon(
-                mOptions,
-                $eXePuzzle.isInExe
-            );
-        }, 500);
-
-        $('#pzlAudioDef-' + instance).on('click', function (e) {
-            e.preventDefault();
-            mOptions.loading = false;
-            const sound = mOptions.puzzlesGame[mOptions.active].audioDefinition;
-            if (sound && sound.length > 4) {
-                $exeDevices.iDevice.gamification.media.playSound(sound);
+                const element = document.getElementById(
+                    'rlcGameContainer-' + instance
+                );
+                $exeDevices.iDevice.gamification.helpers.toggleFullscreen(
+                    element
+                );
             }
-        });
+        );
 
-        $('#pzlAudioClue-' + instance).on('click', function (e) {
+        $exeDevices.iDevice.gamification.report.updateEvaluationIcon(
+            mOptions,
+            this.isInExe
+        );
+
+        $('#rlcResetButton-' + instance).on('click', function (e) {
             e.preventDefault();
-            const sound = mOptions.puzzlesGame[mOptions.active].audioClue;
-            if (sound && sound.length > 4) {
-                $exeDevices.iDevice.gamification.media.playSound(sound);
-            }
+            $eXeRelaciona.reboot(instance);
         });
 
-        $('#pzlMultimedia-' + instance).on('click', '.PZLP-Tile', function () {
-            let q = mOptions.puzzlesGame[mOptions.active];
-            if (
-                mOptions.gameActived ||
-                mOptions.gameOver ||
-                !mOptions.gameStarted
-            )
-                return;
-            let $tile = $(this),
-                tileX = $tile.data('x'),
-                tileY = $tile.data('y');
-            if (
-                (Math.abs(q.emptyX - tileX) === 1 && q.emptyY === tileY) ||
-                (Math.abs(q.emptyY - tileY) === 1 && q.emptyX === tileX)
-            ) {
-                mOptions.gameActived = true;
-                $tile.animate(
-                    {
-                        left: q.emptyX * q.tileSizeX,
-                        top: q.emptyY * q.tileSizeY,
-                    },
-                    300,
-                    function () {
-                        $tile.data('x', q.emptyX);
-                        $tile.data('y', q.emptyY);
-                        q.emptyX = tileX;
-                        q.emptyY = tileY;
-                        mOptions.gameActived = false;
-                        $eXePuzzle.checkIfSolved(instance);
-                    }
+        $('#rlcCheckButton-' + instance).on('click', function (e) {
+            e.preventDefault();
+            $eXeRelaciona.checkState(instance);
+        });
+
+        $eXeRelaciona.ajustarCanvas(instance);
+
+        $rlcGameContainer.on(
+            'mouseenter touchstart',
+            '.RLCP-Author',
+            function () {
+                $eXeRelaciona.showAutorImage($(this), instance);
+            }
+        );
+
+        $rlcGameContainer.on(
+            'mouseleave touchend touchcancel',
+            '.RLCP-Author',
+            function () {
+                $eXeRelaciona.hideAutorImage($(this), instance);
+            }
+        );
+
+        $rlcGameContainer.on('click touchstart', '.RLCP-TAudio', function () {
+            if (!mOptions.gameStarted || mOptions.gameOver) return;
+            const audio = $(this).data('audio');
+            if (audio && audio.length > 3)
+                $exeDevices.iDevice.gamification.media.playSound(audio);
+        });
+
+        $eXeRelaciona.setupEventHandlers(instance);
+        $eXeRelaciona.setupEventHandlersMovil(instance);
+
+        $rlcGameContainer.on('click', '.RLCP-FullLinkImage', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const largeImageSrc = $(this).data('url');
+            if (largeImageSrc && largeImageSrc.length > 3) {
+                $exeDevices.iDevice.gamification.helpers.showFullscreenImage(
+                    largeImageSrc,
+                    $rlcGameContainer
                 );
             }
         });
-
-        $('#pzlImagePuzzle-' + instance).on(
-            'click',
-            '.PZLP-TileChange',
-            function () {
-                if (
-                    mOptions.gameActived ||
-                    mOptions.gameOver ||
-                    !mOptions.gameStarted
-                )
-                    return;
-                let $tile = $(this);
-                if (!mOptions.selectedTile) {
-                    mOptions.selectedTile = $tile;
-                    $tile.css('border', '3px solid #fb0000');
-                } else if ($tile.is(mOptions.selectedTile)) {
-                    mOptions.selectedTile.css('border', '1px solid white');
-                    mOptions.selectedTile = null;
-                } else {
-                    const selectedX = $tile.data('x'),
-                        selectedY = $tile.data('y');
-                    $tile.data('x', mOptions.selectedTile.data('x'));
-                    $tile.data('y', mOptions.selectedTile.data('y'));
-                    mOptions.selectedTile.data('x', selectedX);
-                    mOptions.selectedTile.data('y', selectedY);
-
-                    const selectedTileX = mOptions.selectedTile.css('left'),
-                        selectedTileY = mOptions.selectedTile.css('top');
-                    mOptions.selectedTile.css({
-                        'z-index': '20',
-                        border: '1px solid white',
-                    });
-                    $tile.css({ 'z-index': '20', border: '1px solid white' });
-                    mOptions.gameActived = true;
-
-                    mOptions.selectedTile.animate(
-                        {
-                            left: $tile.css('left'),
-                            top: $tile.css('top'),
-                        },
-                        300
-                    );
-                    $tile.animate(
-                        {
-                            left: selectedTileX,
-                            top: selectedTileY,
-                        },
-                        300,
-                        function () {
-                            mOptions.selectedTile.css({ 'z-index': '1' });
-                            $tile.css({ 'z-index': '1' });
-                            mOptions.selectedTile = null;
-                            mOptions.gameActived = false;
-                            $eXePuzzle.checkIfSolved(instance);
-                        }
-                    );
-                }
-            }
-        );
-
-        $('#pzlShowImage-' + instance).on(
-            'mouseenter click touchstart',
-            function (e) {
-                e.preventDefault();
-                $('#pzlImage-' + instance).css({
-                    'z-index': '10',
-                    display: 'block',
-                });
-            }
-        );
-
-        $('#pzlShowImage-' + instance).on('mouseleave touchend', function (e) {
-            e.preventDefault();
-            $('#pzlImage-' + instance).hide();
-        });
-
-        $('#pzlShowNumber-' + instance).on('click touchstart', function (e) {
-            e.preventDefault();
-            const $numbers = $('#pzlImagePuzzle-' + instance).find(
-                '.PZLP-NumberShow'
+        $eXeRelaciona.refreshGame(instance);
+        $(`#rlcContainerGame-${instance}`).hide();
+        if (mOptions.itinerary.showCodeAccess) {
+            $('#rlcMesajeAccesCodeE-' + instance).text(
+                mOptions.itinerary.messageCodeAccess
             );
-            $numbers.each(function () {
-                let $number = $(this);
-                if ($number.css('display') === 'none') {
-                    $number.css({
-                        display: 'flex',
-                        'z-index': 11,
-                    });
-                } else {
-                    $number.css('display', 'none');
-                }
-            });
+            $('#rlcCodeAccessDiv-' + instance).show();
+            $('#rlcShowClue-' + instance).hide();
+            $('#rlcCubierta-' + instance).show();
+        }
+        mOptions.gameOver = false;
+        if (mOptions.type < 2 && !mOptions.itinerary.showCodeAccess) {
+            $eXeRelaciona.startGame(instance);
+        }
+    },
+
+    setFontSize: function (instance) {
+        const $words = $('#rlcGameContainer-' + instance).find('.RLCP-Word');
+        $words.each(function () {
+            const $card = $(this),
+                $text = $card.find('.RLCP-EText');
+            $eXeRelaciona.adjustFontSize($text);
         });
 
-        $('#pzlImagePuzzle-' + instance).on(
-            'click',
-            '.PZLP-NextPuzzle',
-            function (e) {
-                e.preventDefault();
-                $eXePuzzle.nextPuzzle(instance);
-            }
+        const $definition = $('#rlcGameContainer-' + instance).find(
+            '.RLCP-Definition'
         );
-
-        $('#pzlImagePuzzle-' + instance).on(
-            'click',
-            '.PZLP-RepeatPuzzle',
-            function (e) {
-                e.preventDefault();
-                mOptions.hits--;
-                $eXePuzzle.updateScoreRepeat(instance);
-                $eXePuzzle.showPuzzle(mOptions.active, instance);
-                $eXePuzzle.bindFullscreenEvents(instance);
-                setTimeout(function () {
-                    $eXePuzzle.resizePuzzlePieces(instance);
-                }, 50);
-            }
-        );
-
-        let resizeObserver = new ResizeObserver(
-            $eXePuzzle.debounce(function (entries) {
-                $eXePuzzle.onContainerResize(instance, entries);
-            }, 100)
-        );
-
-        const container = document.getElementById(
-            'pzlGameContainer-' + instance
-        );
-        if (container) {
-            resizeObserver.observe(container);
-        }
-
-        $('#pzlMainContainer-' + instance)
-            .closest('article')
-            .on('click', '.box-toggle-on', function (e) {
-                $eXePuzzle.resizePuzzlePieces(instance);
-            });
+        $definition.each(function () {
+            const $card = $(this),
+                $text = $card.find('.RLCP-EText');
+            $eXeRelaciona.adjustFontSize($text);
+        });
     },
 
-    placeImageWindows: function (naturalWidth, naturalHeight, instance) {
-        let $parent = $('#pzlMainContainer-' + instance);
-        if (
-            $eXePuzzle.isInExe &&
-            ($parent.length === 0 || !$parent.is(':visible'))
-        ) {
-            $parent = $('#node-content-container');
-        }
-
-        const container = document.getElementById(
-            'pzlGameContainer-' + instance
+    refreshGame: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        if (!mOptions) return;
+        if (mOptions.refreshGame) return;
+        mOptions.refreshGame = true;
+        let element = document.getElementById('rlcGameContainer-' + instance);
+        element = element || document.documentElement;
+        mOptions.fullscreen = !(
+            !document.fullscreenElement &&
+            !document.mozFullScreenElement &&
+            !document.webkitFullscreenElement &&
+            !document.msFullscreenElement
         );
-        const isFS = !!(
-            container &&
-            (container.classList.contains('PZLP-IsFull') ||
-                document.fullscreenElement === container ||
-                document.webkitFullscreenElement === container ||
-                document.mozFullScreenElement === container ||
-                document.msFullscreenElement === container)
-        );
-
-        const isMobile = $eXePuzzle.isMobile();
-        const parentWidth = $parent.width() || 900;
-
-        // En móviles, usar el ancho completo disponible
-        // En desktop, limitar a 900px
-        let baseWidth;
-        if (isFS) {
-            baseWidth =
-                $('#pzlMultimedia-' + instance).width() || parentWidth || 900;
-        } else if (isMobile) {
-            // En móviles, usar el ancho completo del contenedor, con un mínimo de 280px
-            baseWidth = Math.max(280, parentWidth);
-        } else {
-            // En desktop, limitar a 900px
-            baseWidth = parentWidth > 900 ? 900 : parentWidth;
-        }
-
-        if (!baseWidth || baseWidth <= 0) baseWidth = 900;
-
-        const wDiv = baseWidth,
-            hDiv = (wDiv * 9) / 16,
-            wM = wDiv,
-            hM = hDiv,
-            varW = naturalWidth / wDiv,
-            varH = naturalHeight / hDiv;
-
-        let wImage = wDiv,
-            hImage = hDiv,
-            xImagen = 0,
-            yImagen = 0;
-
-        if (varW > varH) {
-            wImage = parseInt(wDiv);
-            hImage = parseInt(naturalHeight / varW);
-            yImagen = parseInt((hDiv - hImage) / 2);
-        } else {
-            wImage = parseInt(naturalWidth / varH);
-            hImage = parseInt(hDiv);
-            xImagen = parseInt((wDiv - wImage) / 2);
-        }
-
-        return { w: wImage, h: hImage, x: xImagen, y: yImagen, wm: wM, hm: hM };
+        $eXeRelaciona.setFontSize(instance);
+        $eXeRelaciona.ajustarCanvas(instance);
+        mOptions.refreshGame = false;
     },
 
-    placeImageWindows1: function (naturalWidth, naturalHeight, instance) {
-        const wDiv =
-                $('#pzlImageDiv-' + instance).width() > 200
-                    ? $('#pzlImageDiv-' + instance).width()
-                    : 900,
-            hDiv =
-                $('#pzlImageDiv-' + instance).height() > 112
-                    ? $('#pzlImageDiv-' + instance).height()
-                    : 504,
-            wM =
-                $('#pzlMultimeda-' + instance).width() > 200
-                    ? $('#pzlMultimeda-' + instance).width()
-                    : 900,
-            hM =
-                $('#pzlMultimeda-' + instance).height() > 112
-                    ? $('#pzlMultimeda-' + instance).height()
-                    : 504,
-            varW = naturalWidth / wDiv,
-            varH = naturalHeight / hDiv;
+    removeEventHandlers: function (instance) {
+        const $gameContainer = $(`#rlcGameContainer-${instance}`);
+        $gameContainer.off('mousedown', '.RLCP-Word');
+    },
 
-        let wImage = wDiv,
-            hImage = hDiv,
-            xImagen = 0,
-            yImagen = 0;
+    setupEventHandlers: function (instance) {
+        this.removeEventHandlers(instance);
 
-        if (varW > varH) {
-            wImage = parseInt(wDiv);
-            hImage = parseInt(naturalHeight / varW);
-            yImagen = parseInt((hDiv - hImage) / 2);
-        } else {
-            wImage = parseInt(naturalWidth / varH);
-            hImage = parseInt(hDiv);
-            xImagen = parseInt((wDiv - wImage) / 2);
+        const mOptions = $eXeRelaciona.options[instance],
+            dragThreshold = 5,
+            $gameContainer = $(`#rlcContainerGame-${instance}`);
+        let isDragging = false;
+
+        $gameContainer.on('mousedown', '.RLCP-Word', function (e) {
+            e.preventDefault();
+            if (
+                typeof mOptions == 'undefined' ||
+                !mOptions.gameStarted ||
+                mOptions.gameOver
+            )
+                return;
+
+            const targetWord = $(e.target).closest('.RLCP-Word'),
+                sound = $(this).find('.RLCP-TAudio').data('audio');
+
+            if (targetWord.hasClass('RLCP-Connected')) {
+                $eXeRelaciona.removeConnection(targetWord, instance);
+            }
+
+            $gameContainer.find('.RLCP-Word').removeClass('RLCP-Selected');
+            targetWord.addClass('RLCP-Selected');
+            mOptions.currentWordDiv = targetWord;
+            mOptions.canvas = $(`#rlcCanvas-${instance}`)[0];
+            mOptions.contexto = mOptions.canvas.getContext('2d');
+            mOptions.canvasRect = mOptions.canvas.getBoundingClientRect();
+
+            mOptions.tempEnd = $('<div>')
+                .css({
+                    position: 'absolute',
+                    top: e.clientY - mOptions.canvasRect.top,
+                    left: e.clientX - mOptions.canvasRect.left,
+                    width: 0,
+                    height: 0,
+                    padding: 0,
+                    margin: 0,
+                    'border-radius': '50%',
+                    'background-color': 'red',
+                    'z-index': 9,
+                })
+                .appendTo(`#rlcContainerGame-${instance}`);
+
+            mOptions.lineindex = mOptions.currentWordDiv.data('lineindex');
+            mOptions.startX = e.clientX - mOptions.canvasRect.left;
+            mOptions.startY = e.clientY - mOptions.canvasRect.top;
+            isDragging = false;
+
+            if (sound && sound.length > 4) {
+                $exeDevices.iDevice.gamification.media.playSound(sound);
+            }
+        });
+
+        $(document).on('mousemove.eXeRlc' + instance, (e) => {
+            if (
+                typeof mOptions == 'undefined' ||
+                !mOptions.gameStarted ||
+                mOptions.gameOver ||
+                !mOptions.currentWordDiv ||
+                !mOptions.tempEnd
+            )
+                return;
+
+            const dx = Math.abs(e.clientX - mOptions.startX),
+                dy = Math.abs(e.clientY - mOptions.startY);
+
+            if (dx > dragThreshold || dy > dragThreshold) {
+                mOptions.canvasRect = mOptions.canvas.getBoundingClientRect();
+                mOptions.tempEnd.css({
+                    top: e.clientY - mOptions.canvasRect.top,
+                    left: e.clientX - mOptions.canvasRect.left,
+                });
+                // Guardar coords absolutas para el repintado
+                mOptions._tempX = e.clientX;
+                mOptions._tempY = e.clientY;
+
+                const buffer = 40,
+                    scrollSpeed = 10;
+
+                if (e.clientY < buffer) {
+                    window.scrollBy(0, -scrollSpeed);
+                } else if (window.innerHeight - e.clientY < buffer) {
+                    window.scrollBy(0, scrollSpeed);
+                }
+                isDragging = true;
+                $eXeRelaciona.redibujarLineas(instance, isDragging);
+            }
+        });
+
+        $(document).on('mouseup.eXeRlc' + instance, (e) => {
+            e.preventDefault();
+            if (
+                typeof mOptions == 'undefined' ||
+                !mOptions.gameStarted ||
+                mOptions.gameOver ||
+                !mOptions.currentWordDiv
+            )
+                return;
+
+            const definitionDiv = $(e.target).closest('.RLCP-Definition'),
+                sound = definitionDiv.find('.RLCP-TAudio').data('audio');
+
+            if (
+                definitionDiv.length > 0 &&
+                !definitionDiv.hasClass('RLCP-Connected')
+            ) {
+                if (
+                    !(
+                        mOptions.type === 0 &&
+                        mOptions.currentWordDiv.data('id') !==
+                            definitionDiv.data('id')
+                    )
+                ) {
+                    if (isDragging || mOptions.currentWordDiv) {
+                        $eXeRelaciona.addOrUpdateLine(
+                            mOptions.lineindex,
+                            mOptions.currentWordDiv,
+                            definitionDiv,
+                            $eXeRelaciona.borderColors.blue,
+                            instance
+                        );
+                        $eXeRelaciona.checkAllConnected(instance);
+                        mOptions.currentWordDiv = null;
+                    }
+                }
+                if (sound && sound.length > 4) {
+                    $exeDevices.iDevice.gamification.media.playSound(
+                        sound,
+                        mOptions
+                    );
+                }
+            }
+            mOptions._moving = false;
+            $eXeRelaciona.requestRedraw(instance);
+            isDragging = false;
+            if (mOptions.tempEnd) {
+                mOptions.tempEnd.remove();
+                mOptions.tempEnd = null;
+            }
+            mOptions._tempX = undefined;
+            mOptions._tempY = undefined;
+        });
+    },
+
+    showAutorImage: function ($this, instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            author = $this.data('author'),
+            $rlcAuthorGameSelector = `#rlcAuthorGame-${instance}`;
+        if (author && author.length > 0) {
+            $($rlcAuthorGameSelector)
+                .html(`${mOptions.msgs.msgAuthor}: ${author}`)
+                .show();
         }
-        return {
-            w: wImage,
-            h: hImage,
-            x: xImagen,
-            y: yImagen,
-            wm: wM,
-            hm: hM,
+    },
+
+    hideAutorImage: function ($this, instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            author = $this.data('author'),
+            $rlcAuthorGameSelector = `#rlcAuthorGame-${instance}`;
+        if (mOptions.author && mOptions.author.length > 0) {
+            $($rlcAuthorGameSelector)
+                .html(`${mOptions.msgs.msgAuthor}: ${author}`)
+                .show();
+        } else {
+            $($rlcAuthorGameSelector).hide();
+        }
+    },
+
+    removeEventHandlersMovil: function (instance) {
+        const containerGame = document.querySelector(
+            `#rlcGameContainer-${instance}`
+        );
+
+        if (containerGame) {
+            containerGame.removeEventListener(
+                'touchstart',
+                this.touchStartHandler,
+                { passive: false }
+            );
+            containerGame.removeEventListener(
+                'touchmove',
+                this.touchMoveHandler,
+                { passive: false }
+            );
+            containerGame.removeEventListener(
+                'touchend',
+                this.touchEndHandler,
+                { passive: false }
+            );
+        }
+    },
+
+    setupEventHandlersMovil: function (instance) {
+        $eXeRelaciona.removeEventHandlersMovil(instance);
+
+        const mOptions = $eXeRelaciona.options[instance],
+            $gameContainer = $(`#rlcGameContainer-${instance}`);
+
+        let isDragging = false,
+            dragThreshold = 5;
+
+        this.touchStartHandler = function (e) {
+            e.preventDefault();
+            if (
+                !mOptions.gameStarted ||
+                mOptions.gameOver ||
+                !e.touches ||
+                e.touches.length === 0
+            ) {
+                return;
+            }
+            const touch = e.touches[0],
+                target = touch.target,
+                touchedWord = $(target).closest('.RLCP-Word');
+
+            if (touchedWord.length === 0) return;
+
+            mOptions.targetWord = touchedWord;
+
+            if (mOptions.targetWord.hasClass('RLCP-Connected')) {
+                $eXeRelaciona.removeConnection(mOptions.targetWord, instance);
+            }
+
+            $gameContainer.find('.RLCP-Word').removeClass('RLCP-Selected');
+            mOptions.targetWord.addClass('RLCP-Selected');
+            mOptions.currentWordDiv = mOptions.targetWord;
+            mOptions.canvas = document.getElementById(`rlcCanvas-${instance}`);
+            mOptions.contexto = mOptions.canvas.getContext('2d');
+            mOptions.canvasRect = mOptions.canvas.getBoundingClientRect();
+            mOptions.tempEnd = $('<div>')
+                .css({
+                    position: 'absolute',
+                    top: touch.clientY - mOptions.canvasRect.top,
+                    left: touch.clientX - mOptions.canvasRect.left,
+                    width: 10,
+                    height: 10,
+                    padding: 0,
+                    margin: 0,
+                    'border-radius': '50%',
+                    'background-color': 'red',
+                    'z-index': 9,
+                })
+                .appendTo(`#rlcContainerGame-${instance}`);
+            mOptions.lineindex = mOptions.currentWordDiv.data('lineindex');
+            mOptions.startX = touch.clientX;
+            mOptions.startY = touch.clientY;
+            isDragging = false;
         };
+
+        this.touchMoveHandler = function (e) {
+            if (
+                !mOptions.gameStarted ||
+                mOptions.gameOver ||
+                !mOptions.currentWordDiv ||
+                !mOptions.tempEnd ||
+                !e.touches ||
+                e.touches.length === 0
+            ) {
+                return;
+            }
+            const touch = e.touches[0],
+                dx = Math.abs(touch.clientX - mOptions.startX),
+                dy = Math.abs(touch.clientY - mOptions.startY);
+
+            if (dx > dragThreshold || dy > dragThreshold) {
+                mOptions.tempEnd.css({
+                    top: touch.clientY - mOptions.canvasRect.top,
+                    left: touch.clientX - mOptions.canvasRect.left,
+                });
+                mOptions._tempX = touch.clientX;
+                mOptions._tempY = touch.clientY;
+                const buffer = 40,
+                    scrollSpeed = 10;
+                if (touch.clientY < buffer) {
+                    window.scrollBy(0, -scrollSpeed);
+                } else if (window.innerHeight - touch.clientY < buffer) {
+                    window.scrollBy(0, scrollSpeed);
+                }
+                isDragging = true;
+                $eXeRelaciona.redibujarLineas(instance, isDragging);
+            }
+        };
+
+        this.touchEndHandler = function (e) {
+            e.preventDefault();
+            if (
+                !mOptions.gameStarted ||
+                mOptions.gameOver ||
+                !e.changedTouches ||
+                e.changedTouches.length === 0 ||
+                !mOptions.currentWordDiv
+            ) {
+                return;
+            }
+            const touch = e.changedTouches[0],
+                definitionDiv = $(
+                    document.elementFromPoint(touch.clientX, touch.clientY)
+                ).closest('.RLCP-Definition');
+
+            if (
+                definitionDiv.length > 0 &&
+                !definitionDiv.hasClass('RLCP-Connected')
+            ) {
+                if (
+                    !(
+                        mOptions.type === 0 &&
+                        mOptions.currentWordDiv.data('id') !==
+                            definitionDiv.data('id')
+                    )
+                ) {
+                    if (isDragging || mOptions.currentWordDiv) {
+                        $eXeRelaciona.addOrUpdateLine(
+                            mOptions.lineindex,
+                            mOptions.currentWordDiv,
+                            definitionDiv,
+                            $eXeRelaciona.borderColors.blue,
+                            instance
+                        );
+                        $eXeRelaciona.checkAllConnected(instance);
+                        mOptions.currentWordDiv = null;
+                    }
+                }
+            }
+            mOptions._moving = false;
+            $eXeRelaciona.requestRedraw(instance);
+            isDragging = false;
+            if (mOptions.tempEnd) {
+                mOptions.tempEnd.remove();
+                mOptions.tempEnd = null;
+            }
+            mOptions._tempX = undefined;
+            mOptions._tempY = undefined;
+        };
+
+        const containerGame = document.querySelector(
+            `#rlcGameContainer-${instance}`
+        );
+        if (containerGame) {
+            containerGame.addEventListener(
+                'touchstart',
+                this.touchStartHandler,
+                { passive: false }
+            );
+            containerGame.addEventListener('touchmove', this.touchMoveHandler, {
+                passive: false,
+            });
+            containerGame.addEventListener('touchend', this.touchEndHandler, {
+                passive: false,
+            });
+        }
     },
 
-    nextPuzzle: function (instance) {
-        const mOptions = $eXePuzzle.options[instance];
-        $eXePuzzle.stopAllSounds(instance);
+    removeLine: function (lineindex, instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        mOptions.linesMap.delete(lineindex);
+    },
 
-        mOptions.active++;
-        if (mOptions.active < mOptions.puzzlesGame.length) {
-            $eXePuzzle.showPuzzle(mOptions.active, instance);
-            setTimeout(function () {
-                $eXePuzzle.resizePuzzlePieces(instance);
-            }, 300);
-        } else {
-            $eXePuzzle.gameOver(1, instance);
+    updateColorLine: function (lineindex, color, instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        let line;
+        if (mOptions.linesMap.has(lineindex)) {
+            line = mOptions.linesMap.get(lineindex);
+            line.color = color;
         }
+    },
+
+    dibujaLineaTemporal: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            startRect = mOptions.currentWordDiv[0].getBoundingClientRect(),
+            endRect = mOptions.tempEnd[0].getBoundingClientRect(),
+            x1 = startRect.right - mOptions.canvasRect.left,
+            y1 = startRect.top + startRect.height / 2 - mOptions.canvasRect.top,
+            x2 = endRect.left - mOptions.canvasRect.left,
+            y2 = endRect.top + endRect.height / 2 - mOptions.canvasRect.top;
+
+        $eXeRelaciona.dibujaLineaCurva(
+            mOptions.contexto,
+            x1,
+            y1,
+            x2,
+            y2,
+            $eXeRelaciona.borderColors.blue
+        );
+    },
+
+    addOrUpdateLine: function (lineindex, $word, $definition, color, instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        let line,
+            correct = false;
+
+        if ($word && $definition) {
+            correct = $word.data('id') === $definition.data('id');
+        }
+
+        $word.removeClass('RLCP-Selected');
+        $definition.data('lineindex', lineindex).addClass('RLCP-Connected');
+        $word.addClass('RLCP-Connected');
+
+        if (mOptions.linesMap.has(lineindex)) {
+            line = mOptions.linesMap.get(lineindex);
+            Object.assign(line, {
+                start: $word,
+                end: $definition,
+                correct: correct,
+                color: color,
+            });
+        } else {
+            line = {
+                start: $word,
+                end: $definition,
+                color: color,
+                correct: correct,
+            };
+            mOptions.linesMap.set(lineindex, line);
+        }
+        return line;
+    },
+
+    adjustFontSize: function ($container) {
+        const $text = $container.find('.RLCP-ETextDinamyc').eq(0),
+            minFontSize = 10,
+            maxFontSize = window.innerWidth <= 500 ? 16 : 22,
+            widthc = $container.innerWidth(),
+            heightc = $container.innerHeight();
+
+        let fontSize = maxFontSize;
+
+        $text.css('font-size', fontSize + 'px');
+
+        while (
+            ($text.outerWidth() > widthc || $text.outerHeight() > heightc) &&
+            fontSize > minFontSize
+        ) {
+            fontSize--;
+            $text.css('font-size', fontSize + 'px');
+        }
+
+        while (
+            $text.outerWidth() < widthc &&
+            $text.outerHeight() < heightc &&
+            fontSize < maxFontSize
+        ) {
+            fontSize++;
+            $text.css('font-size', fontSize + 'px');
+
+            if ($text.outerWidth() > widthc || $text.outerHeight() > heightc) {
+                fontSize--;
+                $text.css('font-size', fontSize + 'px');
+                break;
+            }
+        }
+    },
+
+    getNumberCards: function (instance) {
+        const mOptions = $eXeOrdena.options[instance];
+        return mOptions.cardsGame[mOptions.active].cards.length;
+    },
+
+    ajustarCanvas: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            $contenedor = $(`#rlcContainerGame-${instance}`),
+            $canvas = $(`#rlcCanvas-${instance}`);
+
+        const cssW = $contenedor.width();
+        const cssH = $contenedor.height();
+        const dpr = Math.max(window.devicePixelRatio || 1, 1);
+        mOptions._dpr = dpr;
+        mOptions._cssW = cssW;
+        mOptions._cssH = cssH;
+
+        $canvas.attr('width', Math.round(cssW * dpr));
+        $canvas.attr('height', Math.round(cssH * dpr));
+        $canvas.css({ width: cssW + 'px', height: cssH + 'px' });
+
+        mOptions.canvas = $canvas[0];
+
+        if (mOptions.canvas) {
+            mOptions.contexto = mOptions.canvas.getContext('2d');
+            mOptions.contexto.setTransform(dpr, 0, 0, dpr, 0, 0);
+            mOptions.canvasRect = mOptions.canvas.getBoundingClientRect();
+            $eXeRelaciona.requestRedraw(instance);
+        }
+    },
+
+    redibujarLineas: function (instance, isMoving) {
+        const mOptions = $eXeRelaciona.options[instance];
+        if (!mOptions) return;
+        mOptions._moving = !!isMoving;
+        $eXeRelaciona.requestRedraw(instance);
+    },
+
+    dibujaLineaCurva: function (contexto, x0, y0, x1, y1, color) {
+        const p0 = { x: x0, y: y0 },
+            p1 = { x: x1, y: y1 },
+            dx = p1.x - p0.x,
+            dy = p1.y - p0.y,
+            desplazamiento = Math.min(100, Math.abs(dx) / 2),
+            pc1 = { x: p0.x + desplazamiento, y: p0.y },
+            pc2 = { x: p1.x - desplazamiento, y: p1.y },
+            tangente = { x: 3 * (p1.x - pc2.x), y: 3 * (p1.y - pc2.y) },
+            angulo = Math.atan2(tangente.y, tangente.x);
+
+        contexto.beginPath();
+        contexto.strokeStyle = color;
+        contexto.moveTo(p0.x, p0.y);
+        contexto.bezierCurveTo(pc1.x, pc1.y, pc2.x, pc2.y, p1.x, p1.y);
+        contexto.stroke();
+        $eXeRelaciona.dibujaPuntaFlecha(contexto, p1, angulo, color);
+    },
+
+    dibujaPuntaFlecha: function (contexto, punto, angulo, color) {
+        const tamañoFlecha = $eXeRelaciona.isMobile() ? 10 : 12,
+            anguloFlecha = Math.PI / 6;
+
+        contexto.fillStyle = color;
+        contexto.beginPath();
+        contexto.moveTo(punto.x, punto.y);
+
+        contexto.lineTo(
+            punto.x - tamañoFlecha * Math.cos(angulo - anguloFlecha),
+            punto.y - tamañoFlecha * Math.sin(angulo - anguloFlecha)
+        );
+
+        contexto.lineTo(
+            punto.x - tamañoFlecha * Math.cos(angulo + anguloFlecha),
+            punto.y - tamañoFlecha * Math.sin(angulo + anguloFlecha)
+        );
+
+        contexto.closePath();
+        contexto.fill();
+    },
+
+    removeConnection: function (element, instance) {
+        const lineId = element.data('lineindex');
+
+        if (lineId !== undefined) {
+            $eXeRelaciona.removeLine(lineId, instance);
+            $(`#rlcContainerWords-${instance} .RLCP-Word`).each(function () {
+                if ($(this).data('lineindex') === lineId) {
+                    $(this).removeClass('RLCP-Connected');
+                }
+            });
+
+            $(`#rlcContainerDefinitions-${instance} .RLCP-Definition`).each(
+                function () {
+                    if ($(this).data('lineindex') === lineId) {
+                        $(this)
+                            .removeClass('RLCP-Connected')
+                            .data('lineindex', 0);
+                    }
+                }
+            );
+        }
+        $eXeRelaciona.redibujarLineas(instance, false);
+    },
+
+    checkAllConnected: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance],
+            $constainerGame = $(`#rlcGameContainer-${instance}`);
+
+        $(`#rlcCheckButton-${instance}`).hide();
+        $(`#rlcResetButton-${instance}`).hide();
+        $(`#rlcButtons-${instance}`).css('display', 'flex');
+
+        if (
+            $constainerGame.find('.RLCP-Word.RLCP-Connected').length ===
+            $constainerGame.find('.RLCP-Word').length
+        ) {
+            if (mOptions.permitirErrores) {
+                $(`#rlcCheckButton-${instance}`).show();
+            } else {
+                $eXeRelaciona.checkState(instance);
+            }
+        }
+    },
+
+    isMobile: function () {
+        return /Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(
+            navigator.userAgent
+        );
     },
 
     enterCodeAccess: function (instance) {
-        const mOptions = $eXePuzzle.options[instance];
+        const mOptions = $eXeRelaciona.options[instance],
+            codeInput = $(`#rlcCodeAccessE-${instance}`).val().toLowerCase(),
+            codeAccess = mOptions.itinerary.codeAccess.toLowerCase();
 
-        if (
-            mOptions.itinerary.codeAccess ===
-            $(`#pzlCodeAccessE-${instance}`).val()
-        ) {
-            $(`#pzlLinkMaximize-${instance}`).trigger('click');
-            $(`#pzlCodeAccessDiv-${instance}`).hide();
-            $(`#pzlCubierta-${instance}`).hide();
+        if (codeAccess === codeInput) {
+            $(`#rlcCodeAccessDiv-${instance}, #rlcCubierta-${instance}`).hide();
+            $(`#rlcContainerGame-${instance}`).show();
+            $eXeRelaciona.refreshGame(instance);
+            $eXeRelaciona.startGame(instance);
         } else {
-            $(`#pzlMesajeAccesCodeE-${instance}`)
+            $(`#rlcMesajeAccesCodeE-${instance}`)
                 .fadeOut(300)
                 .fadeIn(200)
                 .fadeOut(300)
                 .fadeIn(200);
-            $(`#pzlCodeAccessE-${instance}`).val('');
+            $(`#rlcCodeAccessE-${instance}`).val('');
         }
-    },
-
-    startGame: function (instance) {
-        const mOptions = $eXePuzzle.options[instance];
-
-        if (mOptions.gameStarted) return;
-
-        mOptions.hits = 0;
-        mOptions.errors = 0;
-        mOptions.score = 0;
-        mOptions.gameActived = false;
-        mOptions.counter = 0;
-        mOptions.gameOver = false;
-        mOptions.gameStarted = false;
-        mOptions.obtainedClue = false;
-
-        $(`#pzlShowClue-${instance}`).hide();
-        $(`#pzlPHits-${instance}`).text(mOptions.hits);
-        $(`#pzlPNumber-${instance}`).text(mOptions.numberQuestions);
-        $(`#pzlPScore-${instance}`).text(mOptions.score);
-        $(`#pzlPErrors-${instance}`).text(mOptions.errors);
-        $(`#pzlCubierta-${instance}`).hide();
-        $(`#pzlGameOver-${instance}`).hide();
-    },
-
-    uptateTime: function (time, instance) {
-        const mtime =
-            $exeDevices.iDevice.gamification.helpers.getTimeToString(time);
-        $(`#pzlTime-${instance}`).text(mtime);
-    },
-
-    isMobile: function () {
-        return (
-            navigator.userAgent.match(/Android/i) ||
-            navigator.userAgent.match(/BlackBerry/i) ||
-            navigator.userAgent.match(/iPhone|iPad|iPod/i) ||
-            navigator.userAgent.match(/Opera Mini/i) ||
-            navigator.userAgent.match(/IEMobile/i)
-        );
-    },
-
-    showScoreGame: function (type, instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            msgs = mOptions.msgs,
-            $pzlHistGame = $('#pzlHistGame-' + instance),
-            $pzlLostGame = $('#pzlLostGame-' + instance),
-            $pzlOverNumCards = $('#pzlOverNumCards-' + instance),
-            $pzlOverHits = $('#pzlOverHits-' + instance),
-            $pzlOverErrors = $('#pzlOverErrors-' + instance),
-            $pzlOverScore = $('#pzlOverScore-' + instance),
-            $pzlCubierta = $('#pzlCubierta-' + instance),
-            $pzlGameOver = $('#pzlGameOver-' + instance);
-
-        let message = '',
-            messageColor = 1;
-
-        $pzlHistGame.hide();
-        $pzlLostGame.hide();
-        $pzlOverNumCards.show();
-        $pzlOverHits.show();
-        let mclue = '';
-        switch (type) {
-            case 0:
-                message = msgs.mgsAllPhrases;
-                messageColor = 2;
-                $pzlHistGame.show();
-                if (mOptions.itinerary.showClue) {
-                    const text =
-                        mOptions.msgs.msgClue +
-                        ' ' +
-                        mOptions.itinerary.clueGame;
-                    if (mOptions.obtainedClue) {
-                        mclue = text;
-                    } else {
-                        mclue = msgs.msgTryAgain.replace(
-                            '%s',
-                            mOptions.itinerary.percentageClue
-                        );
-                    }
-                }
-                break;
-            case 1:
-                messageColor = 3;
-                message = msgs.mgsAllPhrases;
-                $pzlLostGame.show();
-                if (mOptions.itinerary.showClue) {
-                    const text =
-                        mOptions.msgs.msgClue +
-                        ' ' +
-                        mOptions.itinerary.clueGame;
-                    if (mOptions.obtainedClue) {
-                        mclue = text;
-                    } else {
-                        mclue = msgs.msgTryAgain.replace(
-                            '%s',
-                            mOptions.itinerary.percentageClue
-                        );
-                    }
-                }
-                break;
-            case 2:
-                messageColor = 3;
-                message = msgs.msgTimeOver;
-                $pzlLostGame.show();
-                if (mOptions.itinerary.showClue) {
-                    const text =
-                        mOptions.msgs.msgClue +
-                        ' ' +
-                        mOptions.itinerary.clueGame;
-                    if (mOptions.obtainedClue) {
-                        mclue = text;
-                    } else {
-                        mclue = msgs.msgTryAgain.replace(
-                            '%s',
-                            mOptions.itinerary.percentageClue
-                        );
-                    }
-                }
-                break;
-            case 3:
-                messageColor = 3;
-                message = msgs.mgsAllPhrases;
-                $pzlLostGame.show();
-                if (mOptions.itinerary.showClue) {
-                    const text =
-                        mOptions.msgs.msgClue +
-                        ' ' +
-                        mOptions.itinerary.clueGame;
-                    if (mOptions.obtainedClue) {
-                        mclue = text;
-                    } else {
-                        mclue = msgs.msgTryAgain.replace(
-                            '%s',
-                            mOptions.itinerary.percentageClue
-                        );
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-
-        $eXePuzzle.showMessage(messageColor, message, instance, true);
-
-        $pzlOverNumCards.html(
-            msgs.msgActivities + ': ' + mOptions.puzzlesGame.length
-        );
-        $pzlOverHits.html(msgs.msgHits + ': ' + mOptions.hits);
-        $pzlOverErrors.html(msgs.msgErrors + ': ' + mOptions.errors);
-        $pzlOverScore.html(
-            msgs.msgScore +
-                ': ' +
-                ((mOptions.hits / mOptions.numberQuestions) * 10).toFixed(2)
-        );
-        $pzlGameOver.show();
-        $pzlCubierta.show();
-
-        $('#pzlShowClue-' + instance).hide();
-        if (mOptions.itinerary.showClue)
-            $eXePuzzle.showMessage(3, mclue, instance, true);
-    },
-
-    gameOver: function (type, instance) {
-        const mOptions = $eXePuzzle.options[instance];
-
-        if (!mOptions.gameStarted) return;
-
-        $(`#pzlImagePuzzle-${instance}`).find('.PZLP-Completed').remove();
-
-        mOptions.gameStarted = false;
-        mOptions.gameActived = true;
-        mOptions.gameOver = true;
-
-        clearInterval(mOptions.counterClock);
-
-        $eXePuzzle.stopAllSounds(instance);
-        $(`#pzlCubierta-${instance}`).show();
-        $eXePuzzle.showScoreGame(type, instance);
-        $eXePuzzle.saveEvaluation(instance);
-
-        if (mOptions.isScorm === 1) {
-            const score = (
-                (mOptions.hits * 10) /
-                mOptions.puzzlesGame.length
-            ).toFixed(2);
-            $eXePuzzle.sendScore(true, instance);
-            $(`#pzlRepeatActivity-${instance}`).text(
-                `${mOptions.msgs.msgYouScore}: ${score}`
-            );
-            $eXePuzzle.initialScore = score;
-        }
-
-        $eXePuzzle.showFeedBack(instance);
-        $(`#pzlCodeAccessDiv-${instance}`).hide();
-    },
-
-    showFeedBack: function (instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            puntos = (mOptions.hits * 100) / mOptions.puzzlesGame.length;
-
-        if (mOptions.feedBack) {
-            if (puntos >= mOptions.percentajeFB) {
-                $(`#pzlGameOver-${instance}`).hide();
-                $(`#pzlDivFeedBack-${instance}`)
-                    .find('.puzzle-feedback-game')
-                    .show()
-                    .parent()
-                    .show();
-            } else {
-                $eXePuzzle.showMessage(
-                    1,
-                    mOptions.msgs.msgTryAgain.replace(
-                        '%s',
-                        mOptions.percentajeFB
-                    ),
-                    instance,
-                    false
-                );
-            }
-        }
-    },
-
-    getRetroFeedMessages: function (iHit, instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            sMessages = iHit
-                ? mOptions.msgs.msgSuccesses
-                : mOptions.msgs.msgFailures,
-            messages = sMessages.split('|');
-
-        return messages[Math.floor(Math.random() * messages.length)];
     },
 
     updateScore: function (correctAnswer, instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            obtainedPoints = correctAnswer
-                ? 10 / mOptions.puzzlesGame.length
-                : 0;
+        const mOptions = $eXeRelaciona.options[instance];
+        let obtainedPoints = 0;
 
-        if (correctAnswer) mOptions.hits++;
-        else mOptions.errors++;
+        if (correctAnswer) {
+            mOptions.hits++;
+            obtainedPoints = 10 / mOptions.realNumberCards;
+        } else {
+            mOptions.errors++;
+        }
+        mOptions.score = Math.max(mOptions.score + obtainedPoints, 0);
+        const sscore = mOptions.score.toFixed(2);
 
-        mOptions.score += obtainedPoints;
-        const sscore =
-            mOptions.score % 1 === 0
-                ? mOptions.score
-                : mOptions.score.toFixed(2);
-
-        $('#pzlPNumber-' + instance).text(
-            mOptions.puzzlesGame.length - mOptions.hits - mOptions.errors
+        $(`#rlcPScore-${instance}`).text(sscore);
+        $(`#rlcPHits-${instance}`).text(mOptions.hits);
+        $(`#rlcPErrors-${instance}`).text(mOptions.errors);
+        $(`#rlcPNumber-${instance}`).text(
+            mOptions.realNumberCards - mOptions.hits - mOptions.errors
         );
-        $('#pzlPErrors-' + instance).text(mOptions.errors);
-        $('#pzlPScore-' + instance).text(sscore);
-        $('#pzlPHits-' + instance).text(mOptions.hits);
-
-        if (
-            (mOptions.score / mOptions.puzzlesGame.length) * 100 >
-            mOptions.itinerary.percentageClue
-        ) {
-            mOptions.obtainedClue = true;
-        }
-        if (mOptions.isScorm === 1) {
-            const score = (
-                (mOptions.hits * 10) /
-                mOptions.puzzlesGame.length
-            ).toFixed(2);
-            $eXePuzzle.sendScore(true, instance);
-            $(`#pzlRepeatActivity-${instance}`).text(
-                `${mOptions.msgs.msgYouScore}: ${score}`
-            );
-        }
-        $eXePuzzle.saveEvaluation(instance);
     },
 
-    updateScoreRepeat: function (instance) {
-        const mOptions = $eXePuzzle.options[instance],
-            obtainedPoints = 10 / mOptions.puzzlesGame.length;
-
-        mOptions.score -= obtainedPoints;
-        const sscore =
-            mOptions.score % 1 === 0
-                ? mOptions.score
-                : mOptions.score.toFixed(2);
-
-        $('#pzlPNumber-' + instance).text(
-            mOptions.puzzlesGame.length - mOptions.hits - mOptions.errors
-        );
-        $('#pzlPErrors-' + instance).text(mOptions.errors);
-        $('#pzlPScore-' + instance).text(sscore);
-        $('#pzlPHits-' + instance).text(mOptions.hits);
-
-        if (
-            (mOptions.score / mOptions.puzzlesGame.length) * 100 >
-            mOptions.itinerary.percentageClue
-        ) {
-            mOptions.obtainedClue = true;
-        }
-
-        $eXePuzzle.saveEvaluation(instance);
-    },
-
-    getMessageErrorAnswer: function (instance) {
-        return $eXePuzzle.getRetroFeedMessages(false, instance);
-    },
-
-    showMessage: function (type, message, instance, end) {
-        const mOptions = $eXePuzzle.options[instance],
-            colors = [
+    showMessage: function (type, message, instance) {
+        const colors = [
                 '#555555',
-                $eXePuzzle.borderColors.red,
-                $eXePuzzle.borderColors.green,
-                $eXePuzzle.borderColors.blue,
-                $eXePuzzle.borderColors.yellow,
+                $eXeRelaciona.borderColors.red,
+                $eXeRelaciona.borderColors.green,
+                $eXeRelaciona.borderColors.blue,
+                $eXeRelaciona.borderColors.yellow,
             ],
             color = colors[type],
-            $pzlMessage = $('#pzlMessage-' + instance);
+            $rlcMessage = $(`#rlcMessage-${instance}`);
+        $rlcMessage
+            .html(message)
+            .css({ color: color, 'font-style': 'bold' })
+            .show();
+    },
 
-        $pzlMessage.html(message).css({ color, 'font-style': 'bold' }).show();
+    saveEvaluation: function (instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+        ((mOptions.scorerp = (mOptions.hits * 10) / mOptions.realNumberCards),
+            $exeDevices.iDevice.gamification.report.saveEvaluation(
+                mOptions,
+                $eXeRelaciona.isInExe
+            ));
+    },
 
-        if (end) {
-            $pzlMessage.hide();
-            let endColor = mOptions.score >= 6 ? 2 : 1;
-            $('#pzlMesasgeEnd-' + instance)
-                .html(message)
-                .css({ color: colors[endColor] });
-            $eXePuzzle.showMessage(message);
-        }
+    sendScore: function (auto, instance) {
+        const mOptions = $eXeRelaciona.options[instance];
+
+        ((mOptions.scorerp = score =
+            (mOptions.hits * 10) / mOptions.realNumberCards),
+            (mOptions.previousScore = $eXeRelaciona.previousScore));
+        mOptions.userName = $eXeRelaciona.userName;
+
+        $exeDevices.iDevice.gamification.scorm.sendScoreNew(auto, mOptions);
+
+        $eXeRelaciona.previousScore = mOptions.previousScore;
     },
 };
 $(function () {
-    $eXePuzzle.init();
+    $eXeRelaciona.init();
 });
